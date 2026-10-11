@@ -1,0 +1,284 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-pb-green: #26351e;
+  --color-pb-khaki: #7b6f35;
+  --color-pb-light: #f5f3ed;
+  --color-pb-white: #ffffff;
+  --color-pb-neutral: #e8e4d8;
+  --color-pb-accent: #b08d2f;
+  --color-pb-border: #e5e0d3;
+  --color-pb-border-soft: #eee9dd;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 1.75rem;
+  --radius-4xl: 2rem;
+  --shadow-sm: 0 1px 2px 0 rgb(38 53 30 / 0.06);
+  --shadow-md: 0 4px 12px -4px rgb(38 53 30 / 0.12);
+  --shadow-lg: 0 12px 28px -12px rgb(38 53 30 / 0.18);
+}
+
+:root {
+  --pb-radius-small: 0.5rem;
+  --pb-radius-medium: 0.75rem;
+  --pb-radius-large: 1rem;
+  --pb-space-page-x: clamp(1rem, 3vw, 2rem);
+  --pb-space-section-y: clamp(1.5rem, 4vw, 2.5rem);
+  --pb-shadow-card: 0 1px 2px rgb(38 53 30 / 0.05), 0 6px 18px -12px rgb(38 53 30 / 0.18);
+  --pb-shadow-raised: 0 8px 20px -12px rgb(38 53 30 / 0.24);
+  --pb-focus-ring: 0 0 0 3px rgb(123 111 53 / 0.2);
+  --pb-transition-fast: 160ms ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+
+  font-family: "Noto Sans Devanagari", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+
+  background: var(--color-pb-light);
+  color: var(--color-pb-green);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+main,
+main > *,
+.pb-workspace-content > * {
+  min-width: 0;
+}
+
+.pb-public-hero {
+  background-color: #26351e;
+  background-image:
+    linear-gradient(180deg, rgba(38, 53, 30, 0.52) 0%, rgba(38, 53, 30, 0.58) 52%, rgba(38, 53, 30, 0.66) 100%),
+    url("./assets/police.jpg");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 640px) {
+  .pb-public-hero {
+    background-position: 58% center;
+  }
+
+  button {
+    min-height: 2.75rem;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.pb-workspace-content {
+  color: var(--color-pb-green);
+  background-color: var(--color-pb-light);
+}
+
+.pb-workspace-content h1 {
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.pb-workspace-content h2,
+.pb-workspace-content h3 {
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea) {
+  max-width: 100%;
+  border: 1px solid var(--color-pb-border);
+  border-radius: var(--pb-radius-small);
+  background-color: #fff;
+  color: var(--color-pb-green);
+  transition: border-color var(--pb-transition-fast), box-shadow var(--pb-transition-fast);
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select) {
+  min-height: 2.75rem;
+}
+
+textarea {
+  min-height: 7rem;
+  line-height: 1.65;
+}
+
+:where(input, select, textarea)::placeholder {
+  color: #77796e;
+  opacity: 1;
+}
+
+:where(input, select, textarea):focus-visible {
+  border-color: var(--color-pb-khaki);
+  box-shadow: var(--pb-focus-ring);
+}
+
+:where(input, select, textarea):disabled {
+  background-color: var(--color-pb-neutral);
+  color: var(--color-pb-green);
+  cursor: not-allowed;
+}
+
+.pb-workspace-content table {
+  max-width: 100%;
+  border-color: var(--color-pb-border);
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.pb-workspace-content thead th {
+  color: var(--color-pb-green);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+}
+
+.pb-workspace-content tbody tr {
+  border-color: var(--color-pb-border-soft);
+}
+
+.pb-workspace-content tbody tr:hover {
+  background-color: rgb(232 228 216 / 0.32);
+}
+
+.pb-workspace-content [role="alert"] {
+  border: 1px solid #efc7c3;
+  border-radius: var(--pb-radius-medium);
+  background-color: #fff7f5;
+  padding: 0.75rem 1rem;
+  color: #8f302b;
+}
+
+.pb-student-sidebar a[aria-current="page"],
+.pb-admin-sidebar a[aria-current="page"] {
+  box-shadow: inset 3px 0 0 var(--color-pb-accent), 0 1px 2px rgb(38 53 30 / 0.08);
+}
+
+.pb-student-sidebar a[aria-current="page"] > span:first-child,
+.pb-admin-sidebar a[aria-current="page"] > span:first-child {
+  background-color: rgb(255 255 255 / 0.16);
+  color: #fff;
+}
+
+.pb-student-sidebar nav a,
+.pb-admin-sidebar nav a {
+  min-height: 2.75rem;
+  transition: background-color var(--pb-transition-fast), color var(--pb-transition-fast), box-shadow var(--pb-transition-fast);
+}
+
+button,
+a {
+  transition-duration: var(--pb-transition-fast);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-pb-khaki) !important;
+  outline-offset: 2px;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.58;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: var(--color-pb-neutral);
+  color: var(--color-pb-green);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+:where(.pb-workspace-content p, .pb-workspace-content h1, .pb-workspace-content h2,
+  .pb-workspace-content h3, .pb-workspace-content dd, .pb-workspace-content dt,
+  .pb-workspace-content a, .pb-workspace-content span, .pb-public-layout p,
+  .pb-public-layout h1, .pb-public-layout h2, .pb-public-layout h3,
+  .pb-public-layout dd, .pb-public-layout dt, .pb-public-layout a) {
+  overflow-wrap: anywhere;
+}
+
+:where(.pb-workspace-content pre, .pb-workspace-content code) {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
