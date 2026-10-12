@@ -18,6 +18,10 @@ from app.models.ai_chat_session_model import AIChatSession
 from app.models.ai_chat_message_model import AIChatMessage
 from app.models.notification_model import Notification
 from app.models.sms_delivery_model import SmsDelivery
+from app.models.registration_otp_model import (
+    RegistrationOtpChallenge,
+    RegistrationOtpRateLimit,
+)
 from app.models.current_affair_model import CurrentAffair
 from app.models.recruitment_notice_model import RecruitmentNotice
 from app.models.site_content_model import (
@@ -50,6 +54,8 @@ __all__ = [
     "AIChatMessage",
     "Notification",
     "SmsDelivery",
+    "RegistrationOtpChallenge",
+    "RegistrationOtpRateLimit",
     "CurrentAffair",
     "RecruitmentNotice",
     "AboutPageContent",

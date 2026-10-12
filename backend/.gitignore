@@ -1,0 +1,167 @@
+# =========================================================
+# PG MANAGEMENT SYSTEM - ROOT GITIGNORE
+# Backend + Frontend
+# =========================================================
+
+
+# =========================================================
+# ENVIRONMENT VARIABLES / SECRETS
+# =========================================================
+
+
+# Environment variables / secrets
+
+
+# =========================================================
+# PYTHON / FLASK BACKEND
+# =========================================================
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python build files
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+backend/venv/
+backend/env/
+backend/.venv/
+
+# Pytest
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# MyPy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Flask
+instance/
+
+# Logs
+*.log
+logs/
+
+# SQLite database
+*.sqlite
+*.sqlite3
+*.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+# =========================================================
+# NODE / REACT / FRONTEND
+# =========================================================
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production build
+frontend/dist/
+dist/
+
+# Vite cache
+frontend/.vite/
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package manager caches
+.npm/
+.yarn/
+.pnpm-store/
+
+
+# =========================================================
+# TEST / COVERAGE
+# =========================================================
+
+coverage/
+.nyc_output/
+
+
+# =========================================================
+# IDE / EDITOR
+# =========================================================
+
+.vscode/
+.idea/
+
+# VS Code local history
+.history/
+
+# Visual Studio
+.vs/
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+
+# =========================================================
+# OPERATING SYSTEM
+# =========================================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+
+# =========================================================
+# TEMPORARY FILES
+# =========================================================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+
+
+# =========================================================
+# SECURITY / CERTIFICATES
+# =========================================================
+
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+
+# =========================================================
+# LOCAL BACKUP FILES
+# =========================================================
+
+*.bak
+*.backup
+*.sql
+*.dump
+backups/
