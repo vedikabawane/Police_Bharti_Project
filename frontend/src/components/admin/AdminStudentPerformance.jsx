@@ -180,7 +180,6 @@ function AdminStudentPerformance({ performance, loading, error, onRetry }) {
     ["100m", latest?.run_100m],
     ["800m", latest?.run_800m],
     ["1600m", latest?.run_1600m],
-    ["Long Jump", latest?.long_jump],
     ["Shot Put", latest?.shot_put],
     ["Push-ups", latest?.push_ups],
   ];
@@ -318,7 +317,6 @@ function AdminStudentPerformance({ performance, loading, error, onRetry }) {
                 { key: "run_100m", label: "100m" },
                 { key: "run_800m", label: "800m" },
                 { key: "run_1600m", label: "1600m" },
-                { key: "long_jump", label: "Long Jump" },
                 { key: "shot_put", label: "Shot Put" },
                 { key: "push_ups", label: "Push-ups" },
               ]}

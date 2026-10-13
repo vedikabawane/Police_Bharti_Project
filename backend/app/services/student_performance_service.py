@@ -384,9 +384,6 @@ class StudentPerformanceService:
                 "run_1600m": StudentPerformanceService._number(
                     record.run_1600m
                 ),
-                "long_jump": StudentPerformanceService._number(
-                    record.long_jump
-                ),
                 "shot_put": StudentPerformanceService._number(
                     record.shot_put
                 ),

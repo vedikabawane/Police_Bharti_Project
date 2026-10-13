@@ -92,7 +92,7 @@ const features = [
     icon: "🏃",
     title: "Physical Tracking",
     description:
-      "Running, 100m, 800m, 1600m, Long Jump, Shot Put, Push-ups आणि Weight track करा.",
+      "Running, 100m, 800m, 1600m, Shot Put, Push-ups आणि Weight track करा.",
   },
   {
     icon: "🤖",
@@ -156,11 +156,6 @@ const physicalActivities = [
     icon: "⚡",
     title: "100m / 800m / 1600m",
     text: "Running performance नोंदवा.",
-  },
-  {
-    icon: "🦘",
-    title: "Long Jump",
-    text: "Jump performance track करा.",
   },
   {
     icon: "🏋️",

@@ -1,4 +1,4 @@
-from flask import Blueprint, g, request, send_file
+from flask import Blueprint, current_app, g, request, send_file
 from marshmallow import ValidationError
 
 from app.middleware.rbac import role_required
@@ -51,6 +51,7 @@ def _send_video_file(video_id, active_only):
     except LookupError:
         return {"success": False, "message": "Video file not found."}, 404
     except OSError:
+        current_app.logger.error("Video file retrieval failed (error_type=OSError).")
         return {"success": False, "message": "Unable to read the video file."}, 500
     response = send_file(
         path,
@@ -164,6 +165,7 @@ def create_admin_video():
     except ValueError as error:
         return {"success": False, "message": str(error)}, 404
     except OSError:
+        current_app.logger.error("Video upload failed (error_type=OSError).")
         return {"success": False, "message": "Unable to store the uploaded video."}, 500
     return {
         "success": True,
@@ -196,6 +198,7 @@ def update_admin_video(video_id):
     except ValueError as error:
         return {"success": False, "message": str(error)}, 404
     except OSError:
+        current_app.logger.error("Video replacement failed (error_type=OSError).")
         return {"success": False, "message": "Unable to store the uploaded video."}, 500
     return {
         "success": True,
@@ -331,6 +334,7 @@ def update_video(video_id):
         }, 404
 
     except OSError:
+        current_app.logger.error("Video upload failed (error_type=OSError).")
         return {"success": False, "message": "Unable to store the uploaded video."}, 500
 
 

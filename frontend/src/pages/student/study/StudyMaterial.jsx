@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getSubjects } from "../../../services/studyService";
+import { logClientDiagnostic } from "../../../services/apiErrorLogging";
 
 function StudyMaterial() {
   const [subjects, setSubjects] = useState([]);
@@ -15,7 +16,7 @@ function StudyMaterial() {
         const response = await getSubjects();
 
         if (!response.success || !Array.isArray(response.data)) {
-          console.error("Unexpected subjects response:", response);
+          logClientDiagnostic("API returned an unexpected subjects payload.");
           if (isActive) {
             setError("अभ्यासाचे विषय लोड करताना समस्या आली. कृपया पुन्हा प्रयत्न करा.");
           }
@@ -25,8 +26,7 @@ function StudyMaterial() {
         if (isActive) {
           setSubjects(response.data);
         }
-      } catch (requestError) {
-        console.error("Failed to load subjects:", requestError);
+      } catch {
         if (isActive) {
           setError("अभ्यासाचे विषय लोड करताना समस्या आली. कृपया पुन्हा प्रयत्न करा.");
         }

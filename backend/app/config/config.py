@@ -71,6 +71,14 @@ def _parse_cors_origins(value, app_env):
     return list(dict.fromkeys(normalized))
 
 
+def production_safe_log_level(level_name, app_env):
+    """Apply the production logging restriction to a configured level."""
+    normalized = str(level_name).upper()
+    if app_env == "production" and normalized == "DEBUG":
+        return "INFO"
+    return normalized
+
+
 _INSECURE_JWT_SECRETS = {
     "change-me",
     "changeme",
@@ -140,11 +148,22 @@ class Config:
     if APP_ENV not in {"development", "testing", "production"}:
         raise ValueError("APP_ENV must be development, testing, or production.")
 
+    # Keep the interactive API console out of production unless explicitly enabled.
+    SWAGGER_ENABLED = _parse_bool("SWAGGER_ENABLED", APP_ENV != "production")
+
+    LOG_LEVEL = os.getenv(
+        "LOG_LEVEL", "DEBUG" if APP_ENV == "development" else "INFO"
+    ).strip().upper()
+    if LOG_LEVEL not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
+        raise ValueError("LOG_LEVEL must be DEBUG, INFO, WARNING, ERROR, or CRITICAL.")
+    LOG_LEVEL = production_safe_log_level(LOG_LEVEL, APP_ENV)
+
     # Debug is opt-in and always disabled in production.
     DEBUG = APP_ENV != "production" and _parse_bool("APP_DEBUG", False)
     CORS_ORIGINS = _parse_cors_origins(os.getenv("CORS_ORIGINS"), APP_ENV)
 
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    SQLALCHEMY_ENGINE_OPTIONS = {"hide_parameters": True}
     TRUSTED_PROXY_HOPS = int(os.getenv("TRUSTED_PROXY_HOPS", "0"))
 
     MAIL_ENABLED = os.getenv("MAIL_ENABLED", "false").strip().lower() in {
@@ -218,3 +237,5 @@ def validate_sms_config(config):
     if provider == "mock":
         raise ValueError("The mock SMS provider cannot be enabled in production.")
     raise ValueError("SMS_PROVIDER has no installed provider adapter.")
+
+

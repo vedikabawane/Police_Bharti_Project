@@ -259,10 +259,6 @@ function StudentProfile() {
 
           setEditing(true);
         } else {
-          console.error(
-            "Failed to load student profile:",
-            requestError
-          );
 
           setErrorMessage(
             getErrorMessage(requestError)
@@ -388,10 +384,6 @@ function StudentProfile() {
         "प्रोफाइल फोटो यशस्वीरित्या अपलोड झाला."
       );
     } catch (uploadError) {
-      console.error(
-        "Failed to upload student profile photo:",
-        uploadError
-      );
 
       if (
         uploadError.response?.status === 400
@@ -543,10 +535,6 @@ function StudentProfile() {
         "तुमची प्रोफाइल यशस्वीरित्या जतन झाली."
       );
     } catch (requestError) {
-      console.error(
-        "Failed to save student profile:",
-        requestError
-      );
 
       setErrorMessage(
         getErrorMessage(requestError)

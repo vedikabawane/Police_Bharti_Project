@@ -82,10 +82,6 @@ function Login() {
       }, 500);
 
     } catch (error) {
-      console.error(
-        "Login error:",
-        error
-      );
 
       // ========================================
       // BACKEND ERROR
@@ -105,7 +101,7 @@ function Login() {
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-pb-light">
 
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-7xl items-start px-4 py-6 sm:px-6 sm:py-10 lg:items-center lg:px-8">
 
         <div className="grid w-full overflow-hidden rounded-3xl bg-white shadow-xl lg:grid-cols-2">
 

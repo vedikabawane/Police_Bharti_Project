@@ -318,6 +318,13 @@ class StudentPerformanceTest(unittest.TestCase):
             ["2026-01-01", "2026-01-02"],
         )
         self.assertEqual(data["latest"]["running_distance"], 2.5)
+        self.assertEqual(
+            set(data["latest"]),
+            {
+                "id", "date", "weight", "running_distance", "running_time",
+                "run_100m", "run_800m", "run_1600m", "shot_put", "push_ups",
+            },
+        )
 
     def test_combined_endpoint_reuses_performance_sections(self):
         response = self.client.get(

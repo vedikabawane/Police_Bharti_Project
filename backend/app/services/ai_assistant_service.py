@@ -219,7 +219,7 @@ class IntentDetector:
             text,
             (
                 "weight", "running", "1600", "1600m", "800", "800m",
-                "100m", "push up", "long jump", "shot put"
+                "100m", "push up", "shot put"
             )
         ):
             return "PHYSICAL_PERFORMANCE", subject
@@ -613,7 +613,6 @@ class DatabaseFallbackProvider(AIProvider):
             ("100m", latest["run_100m"]),
             ("800m", latest["run_800m"]),
             ("1600m", latest["run_1600m"]),
-            ("लांब उडी", latest["long_jump"]),
             ("गोळाफेक", latest["shot_put"]),
             ("पुश-अप्स", latest["push_ups"]),
         ]

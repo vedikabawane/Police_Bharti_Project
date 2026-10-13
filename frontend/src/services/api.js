@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logApiFailure } from "./apiErrorLogging";
 
 const DEVELOPMENT_API_BASE_URL = import.meta.env.DEV
   ? "http://127.0.0.1:5000/api"
@@ -89,9 +90,15 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    logApiFailure(error);
     return Promise.reject(error);
   }
 );
+
+function rejectLoggedApiFailure(error) {
+  logApiFailure(error);
+  return Promise.reject(error);
+}
 
 api.interceptors.response.use(
   (response) => response,
@@ -103,7 +110,7 @@ api.interceptors.response.use(
       !originalRequest ||
       originalRequest._retry
     ) {
-      return Promise.reject(error);
+      return rejectLoggedApiFailure(error);
     }
 
     originalRequest._retry = true;
@@ -127,7 +134,7 @@ api.interceptors.response.use(
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       notifyAuthSync(null);
-      return Promise.reject(error);
+      return rejectLoggedApiFailure(error);
     }
 
     if (!refreshPromise) {
@@ -162,11 +169,12 @@ api.interceptors.response.use(
       const newAccessToken = await refreshPromise;
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       return api(originalRequest);
-    } catch {
+    } catch (refreshError) {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       notifyAuthSync(null);
+      logApiFailure(refreshError);
       return Promise.reject(error);
     }
   }

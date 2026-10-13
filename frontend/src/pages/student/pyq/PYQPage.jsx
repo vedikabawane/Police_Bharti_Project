@@ -30,8 +30,7 @@ function PYQPage() {
         if (isActive) {
           setSubjects(response.data);
         }
-      } catch (requestError) {
-        console.error("Failed to load PYQ subject filters:", requestError);
+      } catch {
         if (isActive) {
           setSubjectError("Unable to load subjects.");
         }
@@ -67,8 +66,7 @@ function PYQPage() {
         if (isActive) {
           setTopics(response.data);
         }
-      } catch (requestError) {
-        console.error("Failed to load PYQ topic filters:", requestError);
+      } catch {
         if (isActive) {
           setTopicError("Unable to load topics for this subject.");
         }
@@ -102,8 +100,7 @@ function PYQPage() {
           (question) => question.is_pyq === true && question.is_active === true
         )
       );
-    } catch (requestError) {
-      console.error("Failed to load previous year questions:", requestError);
+    } catch {
       setError("Unable to load previous year questions.");
     } finally {
       setLoading(false);

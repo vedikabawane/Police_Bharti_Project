@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import g
+from flask import current_app, g
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity
@@ -23,6 +23,7 @@ def role_required(*allowed_roles):
             try:
                 user_id = int(user_id)
             except (TypeError, ValueError):
+                current_app.logger.info("Authorization rejected: invalid user identity.")
                 return {
                     "success": False,
                     "message": "Invalid user identity."
@@ -32,6 +33,7 @@ def role_required(*allowed_roles):
             user = UserRepository.find_by_id(user_id)
 
             if not user:
+                current_app.logger.info("Authorization rejected: account not found.")
                 return {
                     "success": False,
                     "message": "User not found."
@@ -39,6 +41,7 @@ def role_required(*allowed_roles):
 
             # Check account status
             if not user.is_active:
+                current_app.logger.info("Authorization rejected: inactive account.")
                 return {
                     "success": False,
                     "message": "Your account is inactive."
@@ -46,6 +49,7 @@ def role_required(*allowed_roles):
 
             # Check role
             if user.role not in allowed_roles:
+                current_app.logger.info("Authorization rejected: role is not permitted.")
                 return {
                     "success": False,
                     "message": "You do not have permission to access this resource."

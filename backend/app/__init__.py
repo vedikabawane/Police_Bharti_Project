@@ -1,9 +1,17 @@
-from flask import Flask, send_from_directory
+from uuid import uuid4
+
+from flask import Flask, current_app, g, jsonify, request, send_from_directory
 from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from app.config.config import Config, validate_production_config, validate_sms_config
+from app.config.config import (
+    Config,
+    validate_production_config,
+    validate_sms_config,
+)
 from app.extensions import db, migrate, jwt
+from app.logging_config import configure_logging
 from app.models import User
 
 from app.controllers.auth_controller import auth_bp
@@ -32,6 +40,37 @@ from app.controllers.current_affair_controller import current_affair_bp
 from app.controllers.recruitment_notice_controller import recruitment_notice_bp
 from app.controllers.site_content_controller import site_content_bp
 from app.utils.profile_photo_storage import get_profile_photo_directory
+from app.swagger import swagger_bp
+
+
+@jwt.unauthorized_loader
+def _log_missing_jwt(reason):
+    current_app.logger.info("JWT authorization rejected: credentials missing or invalid.")
+    return jsonify(msg=reason), 401
+
+
+@jwt.invalid_token_loader
+def _log_invalid_jwt(reason):
+    current_app.logger.info("JWT authorization rejected: token invalid.")
+    return jsonify(msg=reason), 422
+
+
+@jwt.expired_token_loader
+def _log_expired_jwt(_jwt_header, _jwt_payload):
+    current_app.logger.info("JWT authorization rejected: token expired.")
+    return jsonify(msg="Token has expired"), 401
+
+
+@jwt.revoked_token_loader
+def _log_revoked_jwt(_jwt_header, _jwt_payload):
+    current_app.logger.info("JWT authorization rejected: token revoked.")
+    return jsonify(msg="Token has been revoked"), 401
+
+
+@jwt.needs_fresh_token_loader
+def _log_non_fresh_jwt(_jwt_header, _jwt_payload):
+    current_app.logger.info("JWT authorization rejected: fresh token required.")
+    return jsonify(msg="Fresh token required"), 401
 
 
 def create_app():
@@ -40,6 +79,7 @@ def create_app():
 
     # Configuration
     app.config.from_object(Config)
+    configure_logging(app)
     validate_production_config(app.config)
     validate_sms_config(app.config)
 
@@ -48,6 +88,27 @@ def create_app():
         raise ValueError("TRUSTED_PROXY_HOPS must not be negative.")
     if trusted_proxy_hops:
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=trusted_proxy_hops)
+
+    @app.before_request
+    def assign_request_id():
+        request_id = uuid4().hex
+        g.request_id = request_id
+        request.environ["police_bharti.request_id"] = request_id
+
+    @app.after_request
+    def attach_request_id(response):
+        response.headers["X-Request-ID"] = getattr(g, "request_id", "-")
+        return response
+
+    @app.errorhandler(Exception)
+    def handle_unexpected_exception(error):
+        if isinstance(error, HTTPException):
+            return error
+        current_app.logger.exception("Unhandled request exception.")
+        return jsonify(
+            success=False,
+            message="An unexpected server error occurred.",
+        ), 500
 
     # Extensions
     db.init_app(app)
@@ -58,6 +119,7 @@ def create_app():
     CORS(
         app,
         origins=app.config["CORS_ORIGINS"],
+        expose_headers=["X-Request-ID"],
         allow_headers=[
             "Accept",
             "Authorization",
@@ -93,6 +155,8 @@ def create_app():
     app.register_blueprint(current_affair_bp)
     app.register_blueprint(recruitment_notice_bp)
     app.register_blueprint(site_content_bp)
+    if app.config.get("SWAGGER_ENABLED", False):
+        app.register_blueprint(swagger_bp)
 
     @app.get("/uploads/profile_photos/<filename>")
     def serve_profile_photo(filename):

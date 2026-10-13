@@ -24,7 +24,6 @@ def serialize_record(record):
         "run_100m": str(record.run_100m) if record.run_100m is not None else None,
         "run_1600m": str(record.run_1600m) if record.run_1600m is not None else None,
         "run_800m": str(record.run_800m) if record.run_800m is not None else None,
-        "long_jump": str(record.long_jump) if record.long_jump is not None else None,
         "shot_put": str(record.shot_put) if record.shot_put is not None else None,
         "push_ups": record.push_ups,
         "running_distance": (

@@ -316,7 +316,6 @@ function Performance() {
     ["100m", physicalLatest?.run_100m],
     ["800m", physicalLatest?.run_800m],
     ["1600m", physicalLatest?.run_1600m],
-    ["Long Jump", physicalLatest?.long_jump],
     ["Shot Put", physicalLatest?.shot_put],
     ["Push-ups", physicalLatest?.push_ups],
   ];
@@ -498,7 +497,6 @@ function Performance() {
                           { key: "run_100m", label: "100m", render: (row) => formatValue(row.run_100m) },
                           { key: "run_800m", label: "800m", render: (row) => formatValue(row.run_800m) },
                           { key: "run_1600m", label: "1600m", render: (row) => formatValue(row.run_1600m) },
-                          { key: "long_jump", label: "Long Jump", render: (row) => formatValue(row.long_jump) },
                           { key: "shot_put", label: "Shot Put", render: (row) => formatValue(row.shot_put) },
                           { key: "push_ups", label: "Push-ups", render: (row) => formatValue(row.push_ups) },
                         ]}

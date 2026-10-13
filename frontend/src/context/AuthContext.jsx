@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { setAuthSyncCallback } from "../services/api";
+import { logClientDiagnostic } from "../services/apiErrorLogging";
 
 import {
   loginStudent,
@@ -41,8 +42,8 @@ function AuthProvider({ children }) {
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Failed to parse stored user:", error);
+      } catch {
+        logClientDiagnostic("Stored user data could not be parsed.");
 
         localStorage.removeItem("user");
       }
@@ -105,11 +106,7 @@ function AuthProvider({ children }) {
       const response = await getCurrentUser();
 
       return response;
-    } catch (error) {
-      console.error(
-        "Failed to fetch current user:",
-        error
-      );
+    } catch {
 
       return null;
     }

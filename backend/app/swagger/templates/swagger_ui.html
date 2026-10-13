@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#102d4c">
+    <title>Police Bharti API Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css">
+    <link rel="stylesheet" href="{{ url_for('swagger.static', filename='swagger-custom.css') }}">
+  </head>
+  <body>
+    <header class="brand-bar">
+      <div class="brand-mark" aria-hidden="true">PB</div>
+      <div class="brand-copy">
+        <div class="eyebrow">STUDENT OVERALL PLATFORM</div>
+        <h1>Police Bharti <span>API</span></h1>
+      </div>
+      <div class="header-badge"><span></span> Developer documentation</div>
+    </header>
+    <main>
+      <section class="intro-card">
+        <div>
+          <p class="eyebrow">API REFERENCE</p>
+          <h2>Explore the platform API</h2>
+          <p>Browse available endpoints, inspect request formats, and try protected operations with an existing JWT access token.</p>
+        </div>
+        <div class="auth-hint"><strong>Protected APIs</strong><span>Select <b>Authorize</b> and enter your token. Swagger sends it as <code>Bearer</code>.</span></div>
+      </section>
+      <div id="swagger-ui"></div>
+    </main>
+    <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js" crossorigin></script>
+    <script>
+      window.onload = () => {
+        window.ui = SwaggerUIBundle({
+          url: {{ spec_url|tojson }},
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          displayRequestDuration: true,
+          filter: true,
+          persistAuthorization: false,
+          tryItOutEnabled: false,
+          presets: [SwaggerUIBundle.presets.apis],
+          layout: 'BaseLayout'
+        });
+      };
+    </script>
+  </body>
+</html>

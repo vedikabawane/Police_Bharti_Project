@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getTopicsBySubject } from "../../../services/studyService";
+import { logClientDiagnostic } from "../../../services/apiErrorLogging";
 
 function SubjectTopics() {
   const { subjectId } = useParams();
@@ -28,7 +29,7 @@ function SubjectTopics() {
         const response = await getTopicsBySubject(subjectId);
 
         if (!response.success || !Array.isArray(response.data)) {
-          console.error("Unexpected topics response:", response);
+          logClientDiagnostic("API returned an unexpected topics payload.");
           if (isActive) {
             setError("विषयातील टॉपिक्स लोड करताना समस्या आली. कृपया पुन्हा प्रयत्न करा.");
           }
@@ -38,8 +39,7 @@ function SubjectTopics() {
         if (isActive) {
           setTopics(response.data);
         }
-      } catch (requestError) {
-        console.error("Failed to load topics:", requestError);
+      } catch {
         if (isActive) {
           setError("विषयातील टॉपिक्स लोड करताना समस्या आली. कृपया पुन्हा प्रयत्न करा.");
         }

@@ -4,7 +4,7 @@ from app.extensions import db
 
 
 class PhysicalTraining(db.Model):
-    """Store running times in seconds, distances/jumps/shot put in meters, and weight in kg.
+    """Store running times in seconds, distances/shot put in meters, and weight in kg.
 
     ``running`` is a general running duration in seconds. ``run_100m``,
     ``run_1600m``, and ``run_800m`` are event times in seconds.
@@ -47,11 +47,6 @@ class PhysicalTraining(db.Model):
     )
 
     run_800m = db.Column(
-        db.Numeric(8, 2),
-        nullable=True
-    )
-
-    long_jump = db.Column(
         db.Numeric(8, 2),
         nullable=True
     )

@@ -23,7 +23,6 @@ const metricGroups = [
   {
     title: "इतर शारीरिक उपक्रम",
     fields: [
-      { key: "long_jump", label: "Long Jump", unit: "मीटर" },
       { key: "shot_put", label: "Shot Put", unit: "मीटर" },
       { key: "push_ups", label: "Push-ups", unit: "वेळा", integer: true },
     ],
@@ -155,8 +154,7 @@ function PhysicalTraining() {
         setLatestRecord(latestResponse.success ? latestResponse.data : null);
       }
       return true;
-    } catch (requestError) {
-      console.error("Failed to load physical training records:", requestError);
+    } catch {
       if (isMounted.current) {
         setError("शारीरिक प्रशिक्षणाच्या नोंदी लोड करता आल्या नाहीत.");
       }
@@ -216,7 +214,6 @@ function PhysicalTraining() {
         setFormValues(values);
       }
     } catch (requestError) {
-      console.error("Failed to load physical training record for editing:", requestError);
       if (isMounted.current) {
         setFormError(
           requestError.response
@@ -328,7 +325,6 @@ function PhysicalTraining() {
       );
       await loadRecords();
     } catch (requestError) {
-      console.error("Failed to save physical training record:", requestError);
       if (isMounted.current) {
         setFormError(
           requestError.response
@@ -368,7 +364,6 @@ function PhysicalTraining() {
       }
       await loadRecords();
     } catch (requestError) {
-      console.error("Failed to delete physical training record:", requestError);
       if (isMounted.current) {
         setFormError(
           requestError.response

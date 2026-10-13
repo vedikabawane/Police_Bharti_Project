@@ -12,7 +12,7 @@ from app.schemas.auth_schema import (
     LoginSchema
 )
 from app.repositories.user_repository import UserRepository
-from app.services.auth_service import AuthService
+from app.services.auth_service import AuthService, RegistrationUnavailableError
 
 
 auth_bp = Blueprint(
@@ -34,8 +34,7 @@ def register():
                 "message": "Request body is required."
             }, 400
 
-        schema = RegisterSchema()
-        data = schema.load(json_data)
+        data = RegisterSchema().load(json_data)
 
         user = AuthService.register(data)
 
@@ -66,8 +65,14 @@ def register():
             "message": str(error)
         }, 409
 
+    except RegistrationUnavailableError as error:
+        return {
+            "success": False,
+            "message": str(error),
+        }, 503
+
     except Exception as error:
-        current_app.logger.exception("Registration failed.")
+        current_app.logger.exception("Registration failed due to an unexpected server error.")
         response = {
             "success": False,
             "message": "Registration failed.",
@@ -135,6 +140,7 @@ def login():
         }, 422
 
     except ValueError as error:
+        current_app.logger.warning("Login attempt rejected.")
 
         return {
             "success": False,

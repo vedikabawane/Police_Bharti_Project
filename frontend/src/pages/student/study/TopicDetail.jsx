@@ -148,8 +148,7 @@ function TopicDetail() {
           (item) => item.is_active === true
         )
       );
-    } catch (requestError) {
-      console.error("Failed to load topic content:", requestError);
+    } catch {
       setError("Unable to load topic content.");
     } finally {
       setLoading(false);
@@ -180,8 +179,7 @@ function TopicDetail() {
           setVideos(response.data.filter((item) => item.is_active === true));
         }
       })
-      .catch((requestError) => {
-        console.error("Failed to load topic videos:", requestError);
+      .catch(() => {
         if (isCurrent) setVideosError(VIDEO_ERROR_MESSAGE);
       })
       .finally(() => {

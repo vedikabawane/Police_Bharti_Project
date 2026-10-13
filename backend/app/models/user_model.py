@@ -6,7 +6,7 @@ from app.extensions import db
 class User(db.Model):
     __tablename__ = "users"
 
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True, autoincrement=True)
 
     name = db.Column(db.String(100), nullable=False)
 
@@ -46,6 +46,9 @@ class User(db.Model):
         nullable=False,
         default=False
     )
+
+    mobile_verified = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
+    mobile_verified_at = db.Column(db.DateTime, nullable=True)
 
     sms_notifications_enabled = db.Column(
         db.Boolean,

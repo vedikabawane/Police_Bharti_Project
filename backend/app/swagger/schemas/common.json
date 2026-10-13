@@ -1,0 +1,7017 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Police Bharti Platform API",
+    "version": "1.0.0",
+    "description": "API documentation generated from the registered Police Bharti Flask routes. Protected operations require an access token unless marked as a refresh-token operation."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current Police Bharti API host"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter an existing access token. The UI sends `Authorization: Bearer <token>`. Refresh endpoint requires a refresh token."
+      },
+      "refreshTokenAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter the refresh token returned by login. This scheme is accepted only by the token refresh endpoint."
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{16,80}$"
+        },
+        "description": "Required when send_sms is true."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "UserSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "mobile",
+          "role"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "mobile": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "student",
+              "admin"
+            ]
+          }
+        }
+      },
+      "LoginResult": {
+        "type": "object",
+        "required": [
+          "user",
+          "access_token",
+          "refresh_token",
+          "token_type"
+        ],
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserSummary"
+          },
+          "access_token": {
+            "type": "string",
+            "format": "JWT"
+          },
+          "refresh_token": {
+            "type": "string",
+            "format": "JWT"
+          },
+          "token_type": {
+            "type": "string",
+            "enum": [
+              "Bearer"
+            ]
+          }
+        }
+      },
+      "RefreshResult": {
+        "type": "object",
+        "required": [
+          "access_token"
+        ],
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "format": "JWT"
+          }
+        }
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserSummary"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LoginResult"
+          }
+        }
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RefreshResult"
+          }
+        }
+      },
+      "CurrentUserResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "user_id"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "Register": {
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "mobile",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "example": "Example Student"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "asha@example.test"
+          },
+          "mobile": {
+            "type": "string",
+            "pattern": "^[6-9][0-9]{9}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 128,
+            "format": "password"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Login": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AIChat": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PhysicalTraining": {
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "running": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "run_100m": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "run_1600m": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "run_800m": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "shot_put": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "running_distance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "running_time": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "push_ups": {
+            "type": "integer",
+            "minimum": 0,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePhysicalTraining": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "running": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "run_100m": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "run_1600m": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "run_800m": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "shot_put": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "running_distance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "running_time": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "nullable": true
+          },
+          "push_ups": {
+            "type": "integer",
+            "minimum": 0,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SmsPreference": {
+        "type": "object",
+        "required": [
+          "sms_enabled"
+        ],
+        "properties": {
+          "sms_enabled": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NotificationAnnouncement": {
+        "type": "object",
+        "required": [
+          "title",
+          "message",
+          "recipient_type"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "recipient_type": {
+            "type": "string"
+          },
+          "send_sms": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "Subject": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateSubject": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Topic": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 150
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateTopic": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 150
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Note": {
+        "type": "object",
+        "required": [
+          "title",
+          "content"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateNote": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "content": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HandwrittenNote": {
+        "type": "object",
+        "required": [
+          "title",
+          "file_url"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "file_url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "file_type": {
+            "type": "string",
+            "maxLength": 50,
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateHandwrittenNote": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "file_url": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "file_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Question": {
+        "type": "object",
+        "required": [
+          "question_text",
+          "correct_option",
+          "options"
+        ],
+        "properties": {
+          "exam_name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "exam_year": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2100,
+            "nullable": true
+          },
+          "question_text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "correct_option": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "default": "medium"
+          },
+          "marks": {
+            "type": "number",
+            "minimum": 0,
+            "default": 1
+          },
+          "is_pyq": {
+            "type": "boolean",
+            "default": false
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true
+          },
+          "options": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "required": [
+                "option_label",
+                "option_text"
+              ],
+              "properties": {
+                "option_label": {
+                  "type": "string",
+                  "enum": [
+                    "A",
+                    "B",
+                    "C",
+                    "D"
+                  ]
+                },
+                "option_text": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "negative_marks": {
+            "deprecated": true,
+            "description": "Legacy input accepted for compatibility and ignored by the API."
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateQuestion": {
+        "type": "object",
+        "properties": {
+          "exam_name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "exam_year": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2100,
+            "nullable": true
+          },
+          "question_text": {
+            "type": "string"
+          },
+          "correct_option": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ]
+          },
+          "marks": {
+            "type": "number",
+            "minimum": 0
+          },
+          "is_pyq": {
+            "type": "boolean"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "negative_marks": {
+            "deprecated": true,
+            "description": "Legacy input accepted for compatibility and ignored by the API."
+          },
+          "options": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "$ref": "#/components/schemas/QuestionOptionInput"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "Test": {
+        "type": "object",
+        "required": [
+          "title",
+          "test_type"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "test_type": {
+            "type": "string",
+            "enum": [
+              "subject",
+              "topic",
+              "mixed",
+              "full_mock",
+              "daily",
+              "weekly",
+              "previous_year",
+              "SUBJECT",
+              "TOPIC",
+              "MIXED",
+              "FULL_MOCK",
+              "DAILY",
+              "WEEKLY",
+              "PREVIOUS_YEAR"
+            ]
+          },
+          "subject_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
+          "topic_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "default": 30,
+            "required": null
+          },
+          "negative_marks": {
+            "deprecated": true,
+            "description": "Legacy input accepted for compatibility and ignored by the API."
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminTest": {
+        "type": "object",
+        "required": [
+          "title",
+          "test_type",
+          "duration_minutes",
+          "question_ids"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "test_type": {
+            "type": "string",
+            "enum": [
+              "subject",
+              "topic",
+              "mixed",
+              "full_mock",
+              "daily",
+              "weekly",
+              "previous_year",
+              "SUBJECT",
+              "TOPIC",
+              "MIXED",
+              "FULL_MOCK",
+              "DAILY",
+              "WEEKLY",
+              "PREVIOUS_YEAR"
+            ]
+          },
+          "subject_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
+          "topic_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "default": 30,
+            "required": null
+          },
+          "question_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "negative_marks": {
+            "deprecated": true,
+            "description": "Legacy input accepted for compatibility and ignored by the API."
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateTest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "test_type": {
+            "type": "string",
+            "enum": [
+              "subject",
+              "topic",
+              "mixed",
+              "full_mock",
+              "daily",
+              "weekly",
+              "previous_year",
+              "SUBJECT",
+              "TOPIC",
+              "MIXED",
+              "FULL_MOCK",
+              "DAILY",
+              "WEEKLY",
+              "PREVIOUS_YEAR"
+            ]
+          },
+          "subject_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
+          "topic_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "default": 30,
+            "required": null
+          },
+          "question_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "negative_marks": {
+            "deprecated": true,
+            "description": "Legacy input accepted for compatibility and ignored by the API."
+          }
+        },
+        "additionalProperties": false
+      },
+      "TestQuestion": {
+        "type": "object",
+        "required": [
+          "question_id"
+        ],
+        "properties": {
+          "question_id": {
+            "type": "integer"
+          },
+          "question_order": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SaveAnswer": {
+        "type": "object",
+        "required": [
+          "question_id",
+          "selected_option"
+        ],
+        "properties": {
+          "question_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "selected_option": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Status": {
+        "type": "object",
+        "required": [
+          "is_active"
+        ],
+        "properties": {
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StudyMaterial": {
+        "type": "object",
+        "required": [
+          "subject_id",
+          "topic_id",
+          "title"
+        ],
+        "properties": {
+          "subject_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "topic_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "file": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PreviousYearPDF": {
+        "type": "object",
+        "required": [
+          "title",
+          "exam_name",
+          "exam_year",
+          "pdf"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "exam_name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "exam_year": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "pdf": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CurrentAffair": {
+        "type": "object",
+        "required": [
+          "title",
+          "content",
+          "published_date"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50000
+          },
+          "category": {
+            "type": "string"
+          },
+          "published_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "source_name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 500,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateCurrentAffair": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50000,
+            "nullable": true
+          },
+          "category": {
+            "type": "string"
+          },
+          "published_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "source_name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 500,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecruitmentNotice": {
+        "type": "object",
+        "required": [
+          "title",
+          "notice_type",
+          "published_date"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 50000,
+            "nullable": true
+          },
+          "notice_type": {
+            "type": "string",
+            "enum": [
+              "RECRUITMENT",
+              "ADVERTISEMENT",
+              "EXAM_DATE",
+              "ANSWER_KEY",
+              "RESULT",
+              "PHYSICAL_TEST",
+              "DOCUMENT_VERIFICATION",
+              "IMPORTANT_UPDATE",
+              "OTHER"
+            ]
+          },
+          "recruitment_year": {
+            "type": "integer",
+            "minimum": 1900,
+            "maximum": 2200,
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "post_name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "vacancies": {
+            "type": "integer",
+            "minimum": 0,
+            "nullable": true
+          },
+          "application_start_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "application_end_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "exam_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "published_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "official_source_name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "official_source_url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 500,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateRecruitmentNotice": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 50000,
+            "nullable": true
+          },
+          "notice_type": {
+            "type": "string",
+            "enum": [
+              "RECRUITMENT",
+              "ADVERTISEMENT",
+              "EXAM_DATE",
+              "ANSWER_KEY",
+              "RESULT",
+              "PHYSICAL_TEST",
+              "DOCUMENT_VERIFICATION",
+              "IMPORTANT_UPDATE",
+              "OTHER"
+            ]
+          },
+          "recruitment_year": {
+            "type": "integer",
+            "minimum": 1900,
+            "maximum": 2200,
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "post_name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "vacancies": {
+            "type": "integer",
+            "minimum": 0,
+            "nullable": true
+          },
+          "application_start_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "application_end_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "exam_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "published_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "official_source_name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "official_source_url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 500,
+            "nullable": true
+          },
+          "remove_pdf": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContactSubmission": {
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "subject",
+          "message"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255
+          },
+          "mobile": {
+            "type": "string",
+            "maxLength": 20,
+            "default": ""
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContactStatus": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "READ",
+              "IN_PROGRESS",
+              "REPLIED",
+              "ARCHIVED"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContactNotes": {
+        "type": "object",
+        "required": [
+          "admin_notes"
+        ],
+        "properties": {
+          "admin_notes": {
+            "type": "string",
+            "maxLength": 5000
+          }
+        },
+        "additionalProperties": false
+      },
+      "Video": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "video_url": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminVideo": {
+        "type": "object",
+        "required": [
+          "subject_id",
+          "topic_id",
+          "title"
+        ],
+        "properties": {
+          "subject_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "topic_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "video_url": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateVideo": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "video_url": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "district": {
+            "type": "string"
+          },
+          "target_exam": {
+            "type": "string"
+          },
+          "study_goal": {
+            "type": "string"
+          },
+          "physical_goal": {
+            "type": "string"
+          },
+          "education": {
+            "type": "string"
+          },
+          "qualification": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date"
+          },
+          "height": {
+            "type": "number"
+          },
+          "chest": {
+            "type": "number"
+          },
+          "weight": {
+            "type": "number"
+          },
+          "profile_photo": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "About": {
+        "type": "object",
+        "required": [
+          "hero_title",
+          "hero_subtitle",
+          "introduction",
+          "purpose",
+          "mission",
+          "vision",
+          "study_features",
+          "test_features",
+          "physical_training_info",
+          "current_affairs_info",
+          "recruitment_info",
+          "ai_assistant_info",
+          "performance_info",
+          "free_platform_info",
+          "contact_cta"
+        ],
+        "properties": {
+          "hero_title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "hero_subtitle": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "introduction": {
+            "type": "string",
+            "maxLength": 5000
+          },
+          "purpose": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "mission": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "vision": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "study_features": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "test_features": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "physical_training_info": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "current_affairs_info": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "recruitment_info": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "ai_assistant_info": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "performance_info": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "free_platform_info": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "contact_cta": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContactSettings": {
+        "type": "object",
+        "required": [
+          "heading",
+          "description"
+        ],
+        "properties": {
+          "heading": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "working_hours": {
+            "type": "string",
+            "maxLength": 300,
+            "nullable": true
+          },
+          "support_note": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          },
+          "map_url": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PaginationResult": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "per_page": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "pages": {
+            "type": "integer"
+          }
+        }
+      },
+      "SubjectItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TopicItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "NoteItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "topic_id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "HandwrittenNoteItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "topic_id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "file_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "file_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "QuestionOptionItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "option_label": {
+            "type": "string"
+          },
+          "option_text": {
+            "type": "string"
+          }
+        }
+      },
+      "QuestionItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "topic_id": {
+            "type": "integer"
+          },
+          "exam_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "exam_year": {
+            "type": "integer",
+            "nullable": true
+          },
+          "question_text": {
+            "type": "string"
+          },
+          "correct_option": {
+            "type": "string",
+            "nullable": true
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulty": {
+            "type": "string"
+          },
+          "marks": {
+            "type": "string"
+          },
+          "is_pyq": {
+            "type": "boolean"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionOptionItem"
+            }
+          },
+          "subject": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "topic": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "PhysicalTrainingRecordItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "running": {
+            "type": "string",
+            "nullable": true
+          },
+          "run_100m": {
+            "type": "string",
+            "nullable": true
+          },
+          "run_1600m": {
+            "type": "string",
+            "nullable": true
+          },
+          "run_800m": {
+            "type": "string",
+            "nullable": true
+          },
+          "shot_put": {
+            "type": "string",
+            "nullable": true
+          },
+          "push_ups": {
+            "type": "integer",
+            "nullable": true
+          },
+          "running_distance": {
+            "type": "string",
+            "nullable": true
+          },
+          "running_time": {
+            "type": "string",
+            "nullable": true
+          },
+          "weight": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "NotificationItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "notification_type": {
+            "type": "string"
+          },
+          "related_entity_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "related_entity_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "is_read": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "read_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "VideoItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "topic_id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "video_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "source_type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "VideoAdminItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "topic_id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "video_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "source_type": {
+            "type": "string"
+          },
+          "original_filename": {
+            "type": "string",
+            "nullable": true
+          },
+          "file_size_bytes": {
+            "type": "integer",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "StudyMaterialAdminItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "subject_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "topic_id": {
+            "type": "integer"
+          },
+          "topic_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "original_filename": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "file_size_bytes": {
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "StudyMaterialItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "original_filename": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "file_size_bytes": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PreviousYearPDFItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "exam_name": {
+            "type": "string"
+          },
+          "exam_year": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "original_filename": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "file_size_bytes": {
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CurrentAffairItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string"
+          },
+          "published_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "source_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "source_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "content_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "original_filename": {
+            "type": "string",
+            "nullable": true
+          },
+          "file_size_bytes": {
+            "type": "integer",
+            "nullable": true
+          },
+          "media_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "download_url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CurrentAffairAdminItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "published_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "source_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "source_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "original_filename": {
+            "type": "string",
+            "nullable": true
+          },
+          "file_size_bytes": {
+            "type": "integer",
+            "nullable": true
+          },
+          "media_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "RecruitmentNoticeItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "notice_type": {
+            "type": "string"
+          },
+          "recruitment_year": {
+            "type": "integer",
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
+          },
+          "post_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "vacancies": {
+            "type": "integer",
+            "nullable": true
+          },
+          "application_start_date": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "application_end_date": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "exam_date": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "published_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "official_source_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "official_source_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "pdf_available": {
+            "type": "boolean"
+          },
+          "pdf_original_filename": {
+            "type": "string",
+            "nullable": true
+          },
+          "pdf_file_size_bytes": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "RecruitmentNoticeAdminItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "notice_type": {
+            "type": "string"
+          },
+          "recruitment_year": {
+            "type": "integer",
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
+          },
+          "post_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "vacancies": {
+            "type": "integer",
+            "nullable": true
+          },
+          "application_start_date": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "application_end_date": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "exam_date": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "published_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "official_source_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "official_source_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "pdf_available": {
+            "type": "boolean"
+          },
+          "pdf_original_filename": {
+            "type": "string",
+            "nullable": true
+          },
+          "pdf_mime_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "pdf_file_size_bytes": {
+            "type": "integer",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "ContactMessageItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "mobile": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "read_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "replied_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "admin_notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "PerformanceOverview": {
+        "type": "object",
+        "properties": {
+          "total_tests": {
+            "type": "integer"
+          },
+          "total_test_attempts": {
+            "type": "integer"
+          },
+          "completed_tests": {
+            "type": "integer"
+          },
+          "total_questions_attempted": {
+            "type": "integer"
+          },
+          "total_correct": {
+            "type": "integer"
+          },
+          "total_wrong": {
+            "type": "integer"
+          },
+          "total_skipped": {
+            "type": "integer"
+          },
+          "average_score": {
+            "type": "number",
+            "nullable": true
+          },
+          "average_percentage": {
+            "type": "number",
+            "nullable": true
+          },
+          "best_score": {
+            "type": "number",
+            "nullable": true
+          },
+          "best_percentage": {
+            "type": "number",
+            "nullable": true
+          },
+          "overall_accuracy": {
+            "type": "number",
+            "nullable": true
+          },
+          "total_study_attempts": {
+            "type": "integer",
+            "nullable": true
+          },
+          "improvement_percentage": {
+            "type": "number",
+            "nullable": true
+          }
+        }
+      },
+      "PerformanceProgressItem": {
+        "type": "object",
+        "properties": {
+          "attempt_id": {
+            "type": "integer"
+          },
+          "test_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "date": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "percentage": {
+            "type": "number",
+            "nullable": true
+          }
+        }
+      },
+      "PerformanceTopicItem": {
+        "type": "object",
+        "properties": {
+          "total_tests": {
+            "type": "integer"
+          },
+          "questions_attempted": {
+            "type": "integer"
+          },
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "score": {
+            "type": "number"
+          },
+          "percentage": {
+            "type": "number",
+            "nullable": true
+          },
+          "accuracy": {
+            "type": "number",
+            "nullable": true
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "subject_name": {
+            "type": "string"
+          },
+          "topic_id": {
+            "type": "integer"
+          },
+          "topic_name": {
+            "type": "string"
+          }
+        }
+      },
+      "PhysicalPerformance": {
+        "type": "object",
+        "properties": {
+          "latest_weight": {
+            "type": "number",
+            "nullable": true
+          },
+          "previous_weight": {
+            "type": "number",
+            "nullable": true
+          },
+          "weight_change": {
+            "type": "number",
+            "nullable": true
+          },
+          "latest": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "weight": {
+                "type": "number",
+                "nullable": true
+              },
+              "running_distance": {
+                "type": "number",
+                "nullable": true
+              },
+              "running_time": {
+                "type": "number",
+                "nullable": true
+              },
+              "run_100m": {
+                "type": "number",
+                "nullable": true
+              },
+              "run_800m": {
+                "type": "number",
+                "nullable": true
+              },
+              "run_1600m": {
+                "type": "number",
+                "nullable": true
+              },
+              "shot_put": {
+                "type": "number",
+                "nullable": true
+              },
+              "push_ups": {
+                "type": "integer",
+                "nullable": true
+              }
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PhysicalMeasurement"
+            }
+          }
+        }
+      },
+      "ChatSessionItem": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AdminStudentItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "mobile": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "email_verified": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "profile": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "district": {
+                "type": "string"
+              },
+              "target_exam": {
+                "type": "string"
+              },
+              "study_goal": {
+                "type": "string"
+              },
+              "physical_goal": {
+                "type": "string"
+              },
+              "education": {
+                "type": "string"
+              },
+              "qualification": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "date_of_birth": {
+                "type": "string",
+                "format": "date"
+              },
+              "height": {
+                "type": "number"
+              },
+              "chest": {
+                "type": "number"
+              },
+              "weight": {
+                "type": "number"
+              },
+              "profile_photo": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "SubjectsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubjectItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "TopicsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopicItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "NotesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoteItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "HandwrittenNotesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HandwrittenNoteItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "QuestionsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PhysicalTrainingRecordResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PhysicalTrainingRecordItem"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PhysicalTrainingRecordsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PhysicalTrainingRecordItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "NotificationsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "notifications": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/NotificationItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "NotificationUnreadCountResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "unread_count": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "NotificationReadResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "notification": {
+                "$ref": "#/components/schemas/NotificationItem"
+              },
+              "unread_count": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "NotificationReadAllResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "updated_count": {
+                "type": "integer"
+              },
+              "unread_count": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "SmsPreferenceResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "sms_enabled": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "VideosResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VideoItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "AdminVideosResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "videos": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/VideoAdminItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "AdminStudyMaterialsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "study_materials": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StudyMaterialAdminItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "StudentStudyMaterialsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudyMaterialItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PreviousYearPDFsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "previous_year_pdfs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PreviousYearPDFItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "AdminCurrentAffairsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "current_affairs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CurrentAffairAdminItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "StudentCurrentAffairsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "current_affairs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CurrentAffairItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "AdminCurrentAffairResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CurrentAffairAdminItem"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "StudentCurrentAffairResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CurrentAffairItem"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "AdminRecruitmentNoticesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "recruitment_notices": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RecruitmentNoticeAdminItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "StudentRecruitmentNoticesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "recruitment_notices": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RecruitmentNoticeItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "AdminRecruitmentNoticeResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RecruitmentNoticeAdminItem"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "StudentRecruitmentNoticeResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RecruitmentNoticeItem"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "ContactMessagesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ContactMessageItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "ContactMessageResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ContactMessageItem"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "TeamMembersResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TeamMemberAdminItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "AIHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatSessionItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PerformanceOverviewResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PerformanceOverview"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PerformanceTopicsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerformanceTopicItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PerformanceProgressResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerformanceProgressItem"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PhysicalPerformanceResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PhysicalPerformance"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PerformanceStrengthsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "accuracy_threshold": {
+                "type": "number"
+              },
+              "minimum_questions": {
+                "type": "integer"
+              },
+              "strong_topics": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PerformanceTopicItem"
+                }
+              },
+              "weak_topics": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PerformanceTopicItem"
+                }
+              },
+              "insufficient_data_topics": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PerformanceTopicItem"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PublicTeamMembersResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamMemberPublicItem"
+            }
+          }
+        }
+      },
+      "TeamMemberAdminItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "mobile": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "photo_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "display_order": {
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "photo_original_filename": {
+            "type": "string",
+            "nullable": true
+          },
+          "photo_mime_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "photo_file_size_bytes": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "TeamMemberPublicItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "mobile": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "photo_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "display_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "StudentAdminItemResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "student": {
+                "$ref": "#/components/schemas/AdminStudentItem"
+              }
+            }
+          }
+        }
+      },
+      "PerformanceTestHistoryItem": {
+        "type": "object",
+        "properties": {
+          "attempt_id": {
+            "type": "integer"
+          },
+          "test_id": {
+            "type": "integer"
+          },
+          "test_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "test_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "date": {
+            "type": "string",
+            "nullable": true
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "percentage": {
+            "type": "number",
+            "nullable": true
+          },
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "total_questions": {
+            "type": "integer"
+          },
+          "time_taken_seconds": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "PerformanceResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "overview": {
+                "$ref": "#/components/schemas/PerformanceOverview"
+              },
+              "subjects": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PerformanceTopicItem"
+                }
+              },
+              "topics": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PerformanceTopicItem"
+                }
+              },
+              "strengths": {
+                "$ref": "#/components/schemas/PerformanceStrengthsData"
+              },
+              "progress": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PerformanceProgressItem"
+                }
+              },
+              "test_history": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PerformanceTestHistoryItem"
+                }
+              },
+              "physical": {
+                "$ref": "#/components/schemas/PhysicalPerformance"
+              }
+            }
+          }
+        }
+      },
+      "PerformanceStrengthsData": {
+        "type": "object",
+        "properties": {
+          "accuracy_threshold": {
+            "type": "number"
+          },
+          "minimum_questions": {
+            "type": "integer"
+          },
+          "strong_topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerformanceTopicItem"
+            }
+          },
+          "weak_topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerformanceTopicItem"
+            }
+          },
+          "insufficient_data_topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerformanceTopicItem"
+            }
+          }
+        }
+      },
+      "PerformanceTestHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PerformanceTestHistoryItem"
+            }
+          }
+        }
+      },
+      "PhysicalMeasurement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "weight": {
+            "type": "number",
+            "nullable": true
+          },
+          "running_distance": {
+            "type": "number",
+            "nullable": true
+          },
+          "running_time": {
+            "type": "number",
+            "nullable": true
+          },
+          "run_100m": {
+            "type": "number",
+            "nullable": true
+          },
+          "run_800m": {
+            "type": "number",
+            "nullable": true
+          },
+          "run_1600m": {
+            "type": "number",
+            "nullable": true
+          },
+          "shot_put": {
+            "type": "number",
+            "nullable": true
+          },
+          "push_ups": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "SubjectAdminItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "TopicAdminItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "subject_name": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "NoteAdminItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "subject_id": {
+            "type": "integer"
+          },
+          "subject_name": {
+            "type": "string"
+          },
+          "topic_id": {
+            "type": "integer"
+          },
+          "topic_name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "AdminSubjectsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "subjects": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SubjectAdminItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        }
+      },
+      "AdminTopicsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "topics": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TopicAdminItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        }
+      },
+      "AdminNotesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "notes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/NoteAdminItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        }
+      },
+      "AdminQuestionsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "questions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/QuestionItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        }
+      },
+      "StudentDashboardResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "role": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "StudentProfileResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "user_id": {
+                "type": "integer"
+              },
+              "district": {
+                "type": "string",
+                "nullable": true
+              },
+              "target_exam": {
+                "type": "string",
+                "nullable": true
+              },
+              "study_goal": {
+                "type": "string",
+                "nullable": true
+              },
+              "physical_goal": {
+                "type": "string",
+                "nullable": true
+              },
+              "education": {
+                "type": "string",
+                "nullable": true
+              },
+              "qualification": {
+                "type": "string",
+                "nullable": true
+              },
+              "category": {
+                "type": "string",
+                "nullable": true
+              },
+              "date_of_birth": {
+                "type": "string",
+                "nullable": true,
+                "format": "date"
+              },
+              "height": {
+                "type": "string",
+                "nullable": true
+              },
+              "chest": {
+                "type": "string",
+                "nullable": true
+              },
+              "weight": {
+                "type": "string",
+                "nullable": true
+              },
+              "profile_photo": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        }
+      },
+      "StudentProfileWriteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "user_id": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "StudentProfilePhotoResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "profile_photo": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        }
+      },
+      "SubjectWriteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true
+              },
+              "is_active": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "TopicWriteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "subject_id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true
+              },
+              "is_active": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "NoteCreateResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "subject_id": {
+                "type": "integer"
+              },
+              "topic_id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "NoteUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "is_active": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "HandwrittenNoteWriteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "file_url": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        }
+      },
+      "HandwrittenNoteUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "file_url": {
+                "type": "string",
+                "nullable": true
+              },
+              "is_active": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "QuestionWriteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/QuestionItem"
+          }
+        }
+      },
+      "ArchiveResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "archived": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "PhysicalTrainingDeleteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "ContentStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "is_active": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "TeamMemberStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "is_active": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "PublicAboutResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/About"
+          }
+        }
+      },
+      "AdminAboutResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "hero_title": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "hero_subtitle": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "introduction": {
+                "type": "string",
+                "maxLength": 5000
+              },
+              "purpose": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "mission": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "vision": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "study_features": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "test_features": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "physical_training_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "current_affairs_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "recruitment_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "ai_assistant_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "performance_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "free_platform_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "contact_cta": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "id": {
+                "type": "integer"
+              },
+              "is_active": {
+                "type": "boolean"
+              },
+              "created_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "PublicContactSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ContactSettings"
+          }
+        }
+      },
+      "AdminContactSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "heading": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "email": {
+                "type": "string",
+                "maxLength": 255,
+                "nullable": true
+              },
+              "phone": {
+                "type": "string",
+                "maxLength": 20,
+                "nullable": true
+              },
+              "address": {
+                "type": "string",
+                "maxLength": 1000,
+                "nullable": true
+              },
+              "working_hours": {
+                "type": "string",
+                "maxLength": 300,
+                "nullable": true
+              },
+              "support_note": {
+                "type": "string",
+                "maxLength": 1000,
+                "nullable": true
+              },
+              "map_url": {
+                "type": "string",
+                "maxLength": 1000,
+                "nullable": true
+              },
+              "id": {
+                "type": "integer"
+              },
+              "is_active": {
+                "type": "boolean"
+              },
+              "created_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "ContactSubmissionResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "AIChatResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "session_id": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "answer": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "AIDeleteHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "deleted_sessions": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "AdminStudentStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "student": {
+                "$ref": "#/components/schemas/AdminStudentItem"
+              }
+            }
+          }
+        }
+      },
+      "ActiveStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "is_active": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "NoDataSuccessResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "TeamMemberResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "$ref": "#/components/schemas/TeamMemberAdminItem"
+          }
+        }
+      },
+      "StudentTestItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "test_type": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
+          "topic_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "topic": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration_minutes": {
+            "type": "integer"
+          },
+          "question_count": {
+            "type": "integer"
+          },
+          "total_questions": {
+            "type": "integer"
+          },
+          "total_marks": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "StudentTestsData": {
+        "type": "object",
+        "properties": {
+          "tests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentTestItem"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResult"
+          }
+        }
+      },
+      "StudentTestHistoryItem": {
+        "type": "object",
+        "properties": {
+          "attempt_id": {
+            "type": "integer"
+          },
+          "test_id": {
+            "type": "integer"
+          },
+          "test_title": {
+            "type": "string",
+            "nullable": true
+          },
+          "test_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "subject_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "topic_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "topic_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "score": {
+            "type": "number"
+          },
+          "total_marks": {
+            "type": "number"
+          },
+          "percentage": {
+            "type": "number"
+          },
+          "accuracy": {
+            "type": "number"
+          },
+          "correct": {
+            "type": "integer"
+          },
+          "wrong": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "attempted": {
+            "type": "integer"
+          },
+          "time_taken_seconds": {
+            "type": "integer",
+            "nullable": true
+          },
+          "rank": {
+            "type": "integer",
+            "nullable": true
+          },
+          "previous_percentage": {
+            "type": "number",
+            "nullable": true
+          },
+          "improvement_percentage_points": {
+            "type": "number",
+            "nullable": true
+          },
+          "completed_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "StudentTestHistoryData": {
+        "type": "object",
+        "properties": {
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentTestHistoryItem"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResult"
+          }
+        }
+      },
+      "StudentTestsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/StudentTestsData"
+          }
+        }
+      },
+      "StudentTestHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/StudentTestHistoryData"
+          }
+        }
+      },
+      "StudentTestResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/StudentTestItem"
+          }
+        }
+      },
+      "AdminTestItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "test_type": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "subject": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "topic_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "topic": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "duration_minutes": {
+            "type": "integer"
+          },
+          "question_count": {
+            "type": "integer"
+          },
+          "total_questions": {
+            "type": "integer"
+          },
+          "total_marks": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question_order": {
+                  "type": "integer"
+                },
+                "question_id": {
+                  "type": "integer"
+                },
+                "question": {
+                  "$ref": "#/components/schemas/QuestionItem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AdminTestsData": {
+        "type": "object",
+        "properties": {
+          "tests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminTestItem"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResult"
+          }
+        }
+      },
+      "AdminTestsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminTestsData"
+          }
+        }
+      },
+      "AdminTestResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminTestItem"
+          }
+        }
+      },
+      "AdminTestStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminTestItem"
+          }
+        }
+      },
+      "AdminTestAnalyticsData": {
+        "type": "object",
+        "properties": {
+          "test": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "test_type": {
+                "type": "string"
+              },
+              "total_questions": {
+                "type": "integer"
+              },
+              "total_marks": {
+                "type": "string"
+              },
+              "is_active": {
+                "type": "boolean"
+              }
+            }
+          },
+          "attempts": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "submitted": {
+                "type": "integer"
+              },
+              "expired": {
+                "type": "integer",
+                "nullable": true
+              },
+              "in_progress": {
+                "type": "integer"
+              },
+              "unique_students": {
+                "type": "integer"
+              }
+            }
+          },
+          "score": {
+            "type": "object",
+            "properties": {
+              "average_score": {
+                "type": "string",
+                "nullable": true
+              },
+              "highest_score": {
+                "type": "string",
+                "nullable": true
+              },
+              "lowest_score": {
+                "type": "string",
+                "nullable": true
+              },
+              "average_percentage": {
+                "type": "string",
+                "nullable": true
+              },
+              "average_accuracy": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
+          "answers": {
+            "type": "object",
+            "properties": {
+              "correct": {
+                "type": "integer"
+              },
+              "wrong": {
+                "type": "integer"
+              },
+              "skipped": {
+                "type": "integer"
+              }
+            }
+          },
+          "question_performance": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question_id": {
+                  "type": "integer"
+                },
+                "question_number": {
+                  "type": "integer"
+                },
+                "question_text": {
+                  "type": "string"
+                },
+                "attempts": {
+                  "type": "integer"
+                },
+                "correct": {
+                  "type": "integer"
+                },
+                "wrong": {
+                  "type": "integer"
+                },
+                "skipped": {
+                  "type": "integer"
+                },
+                "accuracy": {
+                  "type": "number",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "score_distribution": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "range": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AdminTestAnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminTestAnalyticsData"
+          }
+        }
+      },
+      "TestItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "test_type": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "topic_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "duration_minutes": {
+            "type": "integer"
+          },
+          "total_questions": {
+            "type": "integer"
+          },
+          "total_marks": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        }
+      },
+      "TestOptionItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "option_label": {
+            "type": "string"
+          },
+          "option_text": {
+            "type": "string"
+          }
+        }
+      },
+      "TestQuestionItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "test_id": {
+            "type": "integer"
+          },
+          "question_id": {
+            "type": "integer"
+          },
+          "question_order": {
+            "type": "integer"
+          },
+          "question": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "subject_id": {
+                "type": "integer"
+              },
+              "topic_id": {
+                "type": "integer"
+              },
+              "exam_name": {
+                "type": "string",
+                "nullable": true
+              },
+              "exam_year": {
+                "type": "integer",
+                "nullable": true
+              },
+              "question_text": {
+                "type": "string"
+              },
+              "difficulty": {
+                "type": "string"
+              },
+              "marks": {
+                "type": "string"
+              },
+              "is_pyq": {
+                "type": "boolean"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TestOptionItem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "TestAttemptResultItem": {
+        "type": "object",
+        "properties": {
+          "attempt_id": {
+            "type": "integer"
+          },
+          "test_id": {
+            "type": "integer"
+          },
+          "test_title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "started_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "submitted_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "total_questions": {
+            "type": "integer"
+          },
+          "attempted_questions": {
+            "type": "integer"
+          },
+          "correct_answers": {
+            "type": "integer"
+          },
+          "wrong_answers": {
+            "type": "integer"
+          },
+          "skipped_questions": {
+            "type": "integer"
+          },
+          "total_marks": {
+            "type": "string"
+          },
+          "score": {
+            "type": "string"
+          },
+          "percentage": {
+            "type": "string"
+          },
+          "accuracy": {
+            "type": "string"
+          },
+          "time_taken_seconds": {
+            "type": "integer",
+            "nullable": true
+          },
+          "previous_score": {
+            "type": "number",
+            "nullable": true
+          },
+          "previous_percentage": {
+            "type": "number",
+            "nullable": true
+          },
+          "improvement_percentage_points": {
+            "type": "number",
+            "nullable": true
+          },
+          "strong_topics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "topic_id": {
+                  "type": "integer"
+                },
+                "topic_name": {
+                  "type": "string"
+                },
+                "percentage": {
+                  "type": "number"
+                },
+                "correct": {
+                  "type": "integer"
+                },
+                "wrong": {
+                  "type": "integer"
+                },
+                "attempted": {
+                  "type": "integer"
+                },
+                "total_questions": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "weak_topics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "topic_id": {
+                  "type": "integer"
+                },
+                "topic_name": {
+                  "type": "string"
+                },
+                "percentage": {
+                  "type": "number"
+                },
+                "correct": {
+                  "type": "integer"
+                },
+                "wrong": {
+                  "type": "integer"
+                },
+                "attempted": {
+                  "type": "integer"
+                },
+                "total_questions": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "question_review": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question_id": {
+                  "type": "integer"
+                },
+                "question_number": {
+                  "type": "integer"
+                },
+                "question_text": {
+                  "type": "string"
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "option_label": {
+                        "type": "string"
+                      },
+                      "option_text": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "selected_option": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "selected_option_text": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "correct_option": {
+                  "type": "string"
+                },
+                "correct_option_text": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "result_status": {
+                  "type": "string",
+                  "enum": [
+                    "skipped",
+                    "correct",
+                    "wrong"
+                  ]
+                },
+                "marks": {
+                  "type": "string"
+                },
+                "marks_earned": {
+                  "type": "string"
+                },
+                "explanation": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "topic": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "subject": {
+                  "type": "string",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "rank": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "StudentAttemptItem": {
+        "type": "object",
+        "properties": {
+          "attempt_id": {
+            "type": "integer"
+          },
+          "test_id": {
+            "type": "integer"
+          },
+          "test_title": {
+            "type": "string"
+          },
+          "test_active": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "started_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "expires_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration_minutes": {
+            "type": "integer"
+          },
+          "remaining_seconds": {
+            "type": "integer"
+          },
+          "is_expired": {
+            "type": "boolean"
+          },
+          "question_count": {
+            "type": "integer"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question_id": {
+                  "type": "integer"
+                },
+                "question_number": {
+                  "type": "integer"
+                },
+                "question_text": {
+                  "type": "string"
+                },
+                "marks": {
+                  "type": "string"
+                },
+                "selected_answer": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "option_label": {
+                        "type": "string"
+                      },
+                      "option_text": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "StudentAttemptSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "test_id": {
+            "type": "integer"
+          },
+          "student_id": {
+            "type": "integer"
+          },
+          "started_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "submitted_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "score": {
+            "type": "string"
+          },
+          "correct_answers": {
+            "type": "integer"
+          },
+          "wrong_answers": {
+            "type": "integer"
+          },
+          "skipped_answers": {
+            "type": "integer"
+          },
+          "percentage": {
+            "type": "string"
+          },
+          "time_taken_seconds": {
+            "type": "integer",
+            "nullable": true
+          },
+          "accuracy": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "AdminDashboardData": {
+        "type": "object",
+        "properties": {
+          "admin": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "role": {
+                "type": "string"
+              }
+            }
+          },
+          "students": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "active": {
+                "type": "integer"
+              },
+              "inactive": {
+                "type": "integer"
+              },
+              "recent_30_days": {
+                "type": "integer"
+              },
+              "recent": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "content": {
+            "type": "object",
+            "properties": {
+              "subjects": {
+                "type": "integer"
+              },
+              "topics": {
+                "type": "integer"
+              },
+              "study_materials": {
+                "type": "integer"
+              },
+              "notes": {
+                "type": "integer"
+              },
+              "handwritten_notes": {
+                "type": "integer"
+              },
+              "videos": {
+                "type": "integer"
+              },
+              "questions": {
+                "type": "integer"
+              },
+              "pyq": {
+                "type": "integer"
+              }
+            }
+          },
+          "tests": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "active": {
+                "type": "integer"
+              },
+              "inactive": {
+                "type": "integer"
+              },
+              "attempts": {
+                "type": "integer"
+              },
+              "completed_attempts": {
+                "type": "integer"
+              }
+            }
+          },
+          "physical": {
+            "type": "object",
+            "properties": {
+              "training_records": {
+                "type": "integer"
+              }
+            }
+          },
+          "ai": {
+            "type": "object",
+            "properties": {
+              "chat_sessions": {
+                "type": "integer"
+              },
+              "chat_messages": {
+                "type": "integer"
+              }
+            }
+          },
+          "recent_activity": {
+            "type": "object",
+            "properties": {
+              "students": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "test_attempts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "attempt_id": {
+                      "type": "integer"
+                    },
+                    "student_id": {
+                      "type": "integer"
+                    },
+                    "student_name": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "test_id": {
+                      "type": "integer"
+                    },
+                    "test_name": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "score": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "percentage": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "attempted_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    },
+                    "submitted_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "recent_limit": {
+                "type": "integer"
+              },
+              "recent_student_window_days": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "AdminDashboardResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminDashboardData"
+          }
+        }
+      },
+      "TestListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TestItem"
+            }
+          }
+        }
+      },
+      "TestResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/TestItem"
+          }
+        }
+      },
+      "TestQuestionsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TestQuestionItem"
+            }
+          }
+        }
+      },
+      "StudentAttemptResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/StudentAttemptItem"
+          }
+        }
+      },
+      "StudentAttemptResultResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/TestAttemptResultItem"
+          }
+        }
+      },
+      "AttemptSaveResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "question_id": {
+                "type": "integer"
+              },
+              "selected_answer": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        }
+      },
+      "AdminVideosCreateResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/VideoAdminItem"
+          }
+        }
+      },
+      "AdminStudyMaterialResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/StudyMaterialAdminItem"
+          }
+        }
+      },
+      "PreviousYearPDFResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PreviousYearPDFItem"
+          }
+        }
+      },
+      "AdminNotificationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "recipient_count": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "TestStartResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/StudentAttemptSummary"
+          }
+        }
+      },
+      "VideoWriteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "video_url": {
+                "type": "string",
+                "nullable": true
+              },
+              "is_active": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "AdminAttemptItem": {
+        "type": "object",
+        "properties": {
+          "attempt_id": {
+            "type": "integer"
+          },
+          "test_id": {
+            "type": "integer"
+          },
+          "test_title": {
+            "type": "string",
+            "nullable": true
+          },
+          "test_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "student_id": {
+            "type": "integer"
+          },
+          "student_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "student_email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "status": {
+            "type": "string"
+          },
+          "started_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "completed_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "score": {
+            "type": "string"
+          },
+          "total_marks": {
+            "type": "string"
+          },
+          "percentage": {
+            "type": "string"
+          },
+          "correct_count": {
+            "type": "integer"
+          },
+          "wrong_count": {
+            "type": "integer"
+          },
+          "skipped_count": {
+            "type": "integer"
+          },
+          "accuracy": {
+            "type": "string"
+          },
+          "time_taken_seconds": {
+            "type": "integer",
+            "nullable": true
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "AdminAttemptsData": {
+        "type": "object",
+        "properties": {
+          "attempts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAttemptItem"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResult"
+          }
+        }
+      },
+      "AdminAttemptsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminAttemptsData"
+          }
+        }
+      },
+      "AdminAttemptDetailData": {
+        "type": "object",
+        "properties": {
+          "attempt": {
+            "type": "object",
+            "properties": {
+              "attempt_id": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string"
+              },
+              "started_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              },
+              "completed_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              },
+              "time_taken_seconds": {
+                "type": "integer",
+                "nullable": true
+              },
+              "duration_minutes": {
+                "type": "integer"
+              }
+            }
+          },
+          "student": {
+            "type": "object",
+            "properties": {
+              "student_id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
+          "test": {
+            "type": "object",
+            "properties": {
+              "test_id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "test_type": {
+                "type": "string"
+              },
+              "total_questions": {
+                "type": "integer"
+              },
+              "total_marks": {
+                "type": "string"
+              },
+              "duration_minutes": {
+                "type": "integer"
+              }
+            }
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "score": {
+                "type": "string"
+              },
+              "total_marks": {
+                "type": "string"
+              },
+              "percentage": {
+                "type": "string"
+              },
+              "correct_count": {
+                "type": "integer"
+              },
+              "wrong_count": {
+                "type": "integer"
+              },
+              "skipped_count": {
+                "type": "integer"
+              },
+              "accuracy": {
+                "type": "string"
+              },
+              "rank": {
+                "type": "integer",
+                "nullable": true
+              },
+              "previous_score": {
+                "type": "number",
+                "nullable": true
+              },
+              "previous_percentage": {
+                "type": "number",
+                "nullable": true
+              },
+              "improvement_percentage_points": {
+                "type": "number",
+                "nullable": true
+              }
+            }
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question_id": {
+                  "type": "integer"
+                },
+                "question_number": {
+                  "type": "integer"
+                },
+                "question_text": {
+                  "type": "string"
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "text": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "selected_option": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "correct_option": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "result_status": {
+                  "type": "string",
+                  "enum": [
+                    "saved",
+                    "unanswered",
+                    "skipped",
+                    "correct",
+                    "wrong"
+                  ]
+                },
+                "marks_earned": {
+                  "type": "string",
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "AdminAttemptDetailResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminAttemptDetailData"
+          }
+        }
+      },
+      "AdminStudentsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "students": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AdminStudentItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginationResult"
+              }
+            }
+          }
+        }
+      },
+      "RootStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "example": "Police Bharti Platform API is running"
+          }
+        }
+      },
+      "APIStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "TeamMemberFields": {
+        "type": "object",
+        "required": [
+          "name",
+          "role"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "bio": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "mobile": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "display_order": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateTeamMemberFields": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "bio": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "mobile": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "display_order": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "TeamMemberMultipart": {
+        "type": "object",
+        "required": [
+          "name",
+          "role"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "bio": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "mobile": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "display_order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "photo": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateTeamMemberMultipart": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "bio": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "mobile": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "display_order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "photo": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "additionalProperties": false
+      },
+      "JwtError": {
+        "type": "object",
+        "properties": {
+          "msg": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "msg"
+        ],
+        "additionalProperties": true
+      },
+      "AuthenticationError": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "$ref": "#/components/schemas/JwtError"
+          }
+        ]
+      },
+      "ValidationOrJwtError": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "$ref": "#/components/schemas/JwtError"
+          }
+        ]
+      },
+      "QuestionOptionInput": {
+        "type": "object",
+        "required": [
+          "option_label",
+          "option_text"
+        ],
+        "properties": {
+          "option_label": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          },
+          "option_text": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminAboutMaybeResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "hero_title": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "hero_subtitle": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "introduction": {
+                "type": "string",
+                "maxLength": 5000
+              },
+              "purpose": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "mission": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "vision": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "study_features": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "test_features": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "physical_training_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "current_affairs_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "recruitment_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "ai_assistant_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "performance_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "free_platform_info": {
+                "type": "string",
+                "maxLength": 3000
+              },
+              "contact_cta": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "id": {
+                "type": "integer"
+              },
+              "is_active": {
+                "type": "boolean"
+              },
+              "created_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              }
+            },
+            "nullable": true
+          }
+        }
+      },
+      "AdminContactSettingsMaybeResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "heading": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "email": {
+                "type": "string",
+                "maxLength": 255,
+                "nullable": true
+              },
+              "phone": {
+                "type": "string",
+                "maxLength": 20,
+                "nullable": true
+              },
+              "address": {
+                "type": "string",
+                "maxLength": 1000,
+                "nullable": true
+              },
+              "working_hours": {
+                "type": "string",
+                "maxLength": 300,
+                "nullable": true
+              },
+              "support_note": {
+                "type": "string",
+                "maxLength": 1000,
+                "nullable": true
+              },
+              "map_url": {
+                "type": "string",
+                "maxLength": 1000,
+                "nullable": true
+              },
+              "id": {
+                "type": "integer"
+              },
+              "is_active": {
+                "type": "boolean"
+              },
+              "created_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              }
+            },
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}

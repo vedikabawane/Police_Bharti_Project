@@ -31,7 +31,6 @@ class PhysicalTrainingSchema(Schema):
     run_100m = _decimal_metric_field()
     run_1600m = _decimal_metric_field()
     run_800m = _decimal_metric_field()
-    long_jump = _decimal_metric_field()
     shot_put = _decimal_metric_field()
 
     push_ups = fields.Integer(

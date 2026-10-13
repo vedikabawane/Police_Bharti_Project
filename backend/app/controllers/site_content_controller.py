@@ -97,6 +97,7 @@ def submit_contact():
         current_app.logger.exception("Contact form rate-limit storage failed.")
         return {"success": False, "message": "Contact form is temporarily unavailable."}, 503
     if not allowed:
+        current_app.logger.info("Contact form request rate limited.")
         return {"success": False, "message": "Please try again in a little while."}, 429
     try: values = ContactSubmissionSchema().load(_json())
     except ValidationError as error: return _validation(error)
