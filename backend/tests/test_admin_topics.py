@@ -53,10 +53,11 @@ class AdminTopicsTest(unittest.TestCase):
         return {"Authorization": f"Bearer {token}"}
 
     def test_authentication_and_active_admin_required(self):
-        self.assertEqual(self.client.get("/api/admin/topics").status_code, 401)
-        self.assertEqual(self.client.get("/api/admin/topics", headers=self._headers(1)).status_code, 403)
-        self.assertEqual(self.client.get("/api/admin/topics", headers=self._headers(3)).status_code, 403)
-        self.assertEqual(self.client.get("/api/admin/topics", headers=self._headers(2)).status_code, 200)
+        path = "/api/admin/topics?page=1&per_page=100"
+        self.assertEqual(self.client.get(path).status_code, 401)
+        self.assertEqual(self.client.get(path, headers=self._headers(1)).status_code, 403)
+        self.assertEqual(self.client.get(path, headers=self._headers(3)).status_code, 403)
+        self.assertEqual(self.client.get(path, headers=self._headers(2)).status_code, 200)
 
     def test_list_includes_subject_and_safe_fields_newest_first(self):
         response = self.client.get("/api/admin/topics", headers=self._headers(2))

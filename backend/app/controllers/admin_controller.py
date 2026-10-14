@@ -29,6 +29,7 @@ def serialize_admin_test(test, include_questions=False):
         "id": test.id,
         "title": test.title,
         "description": test.description,
+        "instructions": test.instructions,
         "test_type": test.test_type,
         "subject_id": test.subject_id,
         "subject": (
@@ -53,6 +54,7 @@ def serialize_admin_test(test, include_questions=False):
             {
                 "question_order": row.question_order,
                 "question_id": row.question_id,
+                "is_admin_created": row.is_admin_created,
                 "question": serialize_question(
                     row.question, include_admin_metadata=True
                 ),

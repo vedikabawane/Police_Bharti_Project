@@ -56,7 +56,7 @@ def about_status():
 @site_content_bp.get("/public/contact")
 def public_contact():
     data = SiteContentService.get_contact_settings(public=True)
-    if data is None: return {"success": False, "message": "Contact information is not available."}, 404
+    if data is None: return {"success": True, "data": {}}, 200
     return {"success": True, "data": data}, 200
 
 

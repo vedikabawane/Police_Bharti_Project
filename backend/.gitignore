@@ -8,6 +8,10 @@
 # ENVIRONMENT VARIABLES / SECRETS
 # =========================================================
 
+.env
+.env.*
+!.env.example
+
 
 # Environment variables / secrets
 

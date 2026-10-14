@@ -7,6 +7,10 @@ from app.services.notification_service import NotificationService
 from app.repositories.subject_repository import SubjectRepository
 from app.repositories.topic_repository import TopicRepository
 from app.repositories.question_repository import QuestionRepository
+from app.models.question_model import Question
+from app.models.question_option_model import QuestionOption
+from app.models.test_question_model import TestQuestion
+from app.models.test_answer_model import TestAnswer
 from app.extensions import db
 from app.services.student_performance_service import StudentPerformanceService
 
@@ -322,13 +326,18 @@ class TestService:
 
         subject_id = data.get("subject_id")
         topic_id = data.get("topic_id")
-        question_ids = data.get("question_ids") or []
-        questions = cls._validate_admin_question_selection(
-            test_type, subject_id, topic_id, question_ids
-        )
+        question_inputs = data.get("questions")
+        if question_inputs is None:
+            question_ids = data.get("question_ids") or []
+            questions = cls._validate_admin_question_selection(
+                test_type, subject_id, topic_id, question_ids
+            )
+        else:
+            questions = []
         create_data = {
             "title": title,
             "description": data.get("description"),
+            "instructions": data.get("instructions"),
             "test_type": test_type,
             "subject_id": subject_id,
             "topic_id": topic_id,
@@ -341,7 +350,38 @@ class TestService:
                 start=Decimal("0"),
             ),
         }
-        test = TestRepository.create_admin_test(create_data, questions)
+        owned_question_ids = set()
+        try:
+            if question_inputs is not None:
+                validated_inputs = cls._validate_admin_inline_questions(
+                    test_type, subject_id, topic_id, question_inputs
+                )
+                questions, owned_question_ids = cls._save_admin_inline_questions(
+                    validated_inputs, existing_test=None
+                )
+                create_data["total_questions"] = len(questions)
+                create_data["total_marks"] = sum(
+                    (max(Decimal("0"), Decimal(str(question.marks))) for question in questions),
+                    start=Decimal("0"),
+                )
+                if create_data["is_active"]:
+                    cls._validate_publishable_test(
+                        test_type, questions, create_data["total_marks"]
+                    )
+                test = TestRepository.create_admin_test(
+                    create_data, questions, owned_question_ids
+                )
+            else:
+                if data.get("question_ids") is None:
+                    raise ValueError("At least one question is required.")
+                if create_data["is_active"]:
+                    cls._validate_publishable_test(
+                        test_type, questions, create_data["total_marks"]
+                    )
+                test = TestRepository.create_admin_test(create_data, questions)
+        except Exception:
+            db.session.rollback()
+            raise
         if test.is_active:
             NotificationService.try_automatic_notification(
                 NotificationService.notify_students_about_test,
@@ -373,7 +413,10 @@ class TestService:
         effective_type = update_data.get("test_type", test.test_type)
         effective_subject_id = update_data.get("subject_id", test.subject_id)
         effective_topic_id = update_data.get("topic_id", test.topic_id)
+        inline_question_inputs = update_data.pop("questions", None)
         requested_question_ids = update_data.pop("question_ids", None)
+        if inline_question_inputs is not None and requested_question_ids is not None:
+            raise ValueError("Provide either questions or question_ids, not both.")
         existing_question_ids = [
             row.question_id for row in TestRepository.get_test_questions(test_id)
         ]
@@ -389,12 +432,36 @@ class TestService:
             for key in structural_fields
         )
         has_attempts = TestRepository.test_has_attempts(test_id)
-        if has_attempts and (questions_changed or structure_changed):
+        inline_questions_changed = (
+            inline_question_inputs is not None
+            and not cls._inline_admin_questions_match_test(
+                inline_question_inputs, test, effective_type,
+                effective_subject_id, effective_topic_id,
+            )
+        )
+        if has_attempts and (
+            questions_changed or inline_questions_changed or structure_changed
+        ):
             raise ValueError(
                 "Test questions, type, subject, or topic cannot be changed after student attempts exist."
             )
         questions = None
-        if requested_question_ids is not None:
+        owned_question_ids = None
+        if inline_question_inputs is not None and not inline_questions_changed:
+            inline_question_inputs = None
+        if inline_question_inputs is not None:
+            validated_inputs = cls._validate_admin_inline_questions(
+                effective_type, effective_subject_id, effective_topic_id,
+                inline_question_inputs, test,
+            )
+            try:
+                questions, owned_question_ids = cls._save_admin_inline_questions(
+                    validated_inputs, existing_test=test
+                )
+            except Exception:
+                db.session.rollback()
+                raise
+        elif requested_question_ids is not None:
             questions = cls._validate_admin_question_selection(
                 effective_type, effective_subject_id, effective_topic_id,
                 requested_question_ids,
@@ -404,12 +471,38 @@ class TestService:
                 effective_type, effective_subject_id, effective_topic_id,
                 existing_question_ids,
             )
+        if questions is not None and owned_question_ids is None:
+            existing_managed_ids = {
+                row.question_id for row in TestRepository.get_test_questions(test_id)
+                if row.is_admin_created
+            }
+            owned_question_ids = existing_managed_ids.intersection(
+                question.id for question in questions
+            )
 
         if "duration_minutes" in update_data:
             duration = update_data["duration_minutes"]
             if isinstance(duration, bool) or not isinstance(duration, int) or duration < 1:
                 raise ValueError("duration_minutes must be a positive integer.")
-        return TestRepository.update_admin_test(test, update_data, questions)
+        try:
+            if update_data.get("is_active", test.is_active):
+                publish_questions = questions or [
+                    row.question for row in TestRepository.get_test_questions(test_id)
+                    if row.question is not None
+                ]
+                marks = sum(
+                    (max(Decimal("0"), Decimal(str(question.marks))) for question in publish_questions),
+                    start=Decimal("0"),
+                )
+                cls._validate_publishable_test(effective_type, publish_questions, marks)
+            if owned_question_ids is None:
+                return TestRepository.update_admin_test(test, update_data, questions)
+            return TestRepository.update_admin_test(
+                test, update_data, questions, owned_question_ids
+            )
+        except Exception:
+            db.session.rollback()
+            raise
 
     @staticmethod
     def update_admin_test_status(test_id, is_active):
@@ -418,6 +511,16 @@ class TestService:
         test = TestRepository.find_by_id(test_id)
         if test is None:
             raise ValueError("Test not found.")
+        if is_active:
+            questions = [
+                row.question for row in TestRepository.get_test_questions(test_id)
+                if row.question is not None
+            ]
+            marks = sum(
+                (max(Decimal("0"), Decimal(str(question.marks))) for question in questions),
+                start=Decimal("0"),
+            )
+            TestService._validate_publishable_test(test.test_type, questions, marks)
         was_active = test.is_active
         updated_test = TestRepository.update_test_status(test, is_active)
         if not was_active and updated_test.is_active:
@@ -485,6 +588,184 @@ class TestService:
             if test_type == "previous_year" and not question.is_pyq:
                 raise ValueError("PREVIOUS_YEAR tests can only include question-bank PYQs.")
         return ordered_questions
+
+    @classmethod
+    def _validate_admin_inline_questions(
+        cls, test_type, subject_id, topic_id, question_inputs, existing_test=None
+    ):
+        if not isinstance(question_inputs, list) or not question_inputs:
+            raise ValueError("At least one question is required.")
+        if test_type == "subject" and subject_id is None:
+            raise ValueError("subject_id is required for SUBJECT tests.")
+        if test_type == "topic" and (subject_id is None or topic_id is None):
+            raise ValueError("subject_id and topic_id are required for TOPIC tests.")
+        if subject_id is not None and SubjectRepository.find_by_id(subject_id) is None:
+            raise ValueError("Subject not found.")
+        selected_topic = TopicRepository.find_by_id(topic_id) if topic_id is not None else None
+        if topic_id is not None and selected_topic is None:
+            raise ValueError("Topic not found.")
+        if selected_topic is not None and subject_id is not None:
+            if selected_topic.subject_id != subject_id:
+                raise ValueError("Topic does not belong to this subject.")
+
+        existing_managed = {}
+        if existing_test is not None:
+            existing_managed = {
+                row.question_id: row.question
+                for row in TestQuestion.query.filter_by(
+                    test_id=existing_test.id, is_admin_created=True
+                ).all()
+                if row.question is not None
+            }
+        seen_ids = set()
+        validated = []
+        for item in question_inputs:
+            item = dict(item)
+            question_id = item.get("id")
+            if question_id is not None:
+                if question_id in seen_ids:
+                    raise ValueError("Duplicate question IDs are not allowed.")
+                seen_ids.add(question_id)
+                question = existing_managed.get(question_id)
+                if question is None:
+                    raise ValueError(
+                        "Only questions created in this test can be edited in place."
+                    )
+                if TestQuestion.query.filter(
+                    TestQuestion.question_id == question_id,
+                    TestQuestion.test_id != existing_test.id,
+                ).first() is not None or TestAnswer.query.filter_by(
+                    question_id=question_id
+                ).first() is not None:
+                    raise ValueError(
+                        "A question used by another test or historical attempt cannot be edited."
+                    )
+
+            item_subject_id = item.get("subject_id") or subject_id
+            item_topic_id = item.get("topic_id") or topic_id
+            if test_type == "topic":
+                if item.get("subject_id") not in (None, subject_id):
+                    raise ValueError("All TOPIC test questions must belong to the selected subject.")
+                if item.get("topic_id") not in (None, topic_id):
+                    raise ValueError("All TOPIC test questions must belong to the selected topic.")
+                item_subject_id = subject_id
+                item_topic_id = topic_id
+            if test_type == "subject" and item_subject_id != subject_id:
+                raise ValueError("All SUBJECT test questions must belong to the selected subject.")
+            if item_subject_id is None or item_topic_id is None:
+                raise ValueError("Every question must have a subject and topic.")
+            if not item["question_text"].strip() or any(
+                not option["option_text"].strip() for option in item["options"]
+            ):
+                raise ValueError("Question text and all four options are required.")
+            question_subject = SubjectRepository.find_by_id(item_subject_id)
+            question_topic = TopicRepository.find_by_id(item_topic_id)
+            if question_subject is None:
+                raise ValueError(f"Subject {item_subject_id} not found.")
+            if question_topic is None:
+                raise ValueError(f"Topic {item_topic_id} not found.")
+            if question_topic.subject_id != item_subject_id:
+                raise ValueError("Question topic does not belong to its subject.")
+            if test_type == "topic" and item_topic_id != topic_id:
+                raise ValueError("All TOPIC test questions must belong to the selected topic.")
+            item["subject_id"] = item_subject_id
+            item["topic_id"] = item_topic_id
+            if test_type == "previous_year" and not item.get("is_pyq", False):
+                raise ValueError("PREVIOUS_YEAR tests can only include PYQ questions.")
+            validated.append((item, existing_managed.get(question_id)))
+        return validated
+
+    @staticmethod
+    def _save_admin_inline_questions(validated_inputs, existing_test=None):
+        questions = []
+        owned_question_ids = set()
+        for item, existing_question in validated_inputs:
+            question = existing_question or Question(
+                subject_id=item["subject_id"],
+                topic_id=item["topic_id"],
+                question_text=item["question_text"],
+                correct_option=item["correct_option"],
+            )
+            question.subject_id = item["subject_id"]
+            question.topic_id = item["topic_id"]
+            question.question_text = item["question_text"].strip()
+            question.correct_option = item["correct_option"]
+            question.exam_name = item.get("exam_name")
+            question.exam_year = item.get("exam_year")
+            question.explanation = item.get("explanation")
+            question.difficulty = item.get("difficulty", "medium")
+            question.marks = item.get("marks", Decimal("1"))
+            question.negative_marks = Decimal("0")
+            question.is_pyq = item.get("is_pyq", False)
+            question.is_active = True
+            if existing_question is None:
+                if db.engine.dialect.name == "sqlite":
+                    question.id = (
+                        db.session.query(db.func.max(Question.id)).scalar() or 0
+                    ) + 1
+                db.session.add(question)
+                db.session.flush()
+            else:
+                question.options.clear()
+            for option_data in item["options"]:
+                option = QuestionOption(
+                    option_label=option_data["option_label"],
+                    option_text=option_data["option_text"].strip(),
+                )
+                if db.engine.dialect.name == "sqlite":
+                    option.id = (
+                        db.session.query(db.func.max(QuestionOption.id)).scalar() or 0
+                    ) + 1
+                question.options.append(option)
+            db.session.flush()
+            questions.append(question)
+            owned_question_ids.add(question.id)
+        return questions, owned_question_ids
+
+    @staticmethod
+    def _inline_admin_questions_match_test(
+        question_inputs, test, test_type, subject_id, topic_id
+    ):
+        rows = sorted(test.questions, key=lambda row: row.question_order)
+        if len(rows) != len(question_inputs):
+            return False
+        for item, row in zip(question_inputs, rows):
+            question = row.question
+            if question is None:
+                return False
+            expected_subject = subject_id if test_type in {"subject", "topic"} else item.get("subject_id")
+            expected_topic = topic_id if test_type == "topic" else item.get("topic_id")
+            if (
+                item.get("question_text", "").strip() != question.question_text
+                or item.get("correct_option") != question.correct_option
+                or item.get("explanation") != question.explanation
+                or item.get("difficulty", "medium") != question.difficulty
+                or Decimal(str(item.get("marks", "1"))) != Decimal(str(question.marks))
+                or item.get("exam_name") != question.exam_name
+                or item.get("exam_year") != question.exam_year
+                or item.get("is_pyq", False) != question.is_pyq
+                or expected_subject != question.subject_id
+                or expected_topic != question.topic_id
+            ):
+                return False
+            submitted_options = {
+                option["option_label"]: option["option_text"].strip()
+                for option in item.get("options", [])
+            }
+            current_options = {
+                option.option_label: option.option_text
+                for option in question.options
+            }
+            if submitted_options != current_options:
+                return False
+        return True
+
+    @staticmethod
+    def _validate_publishable_test(test_type, questions, total_marks):
+        if not questions:
+            raise ValueError("A test must contain at least one question before publishing.")
+        if test_type == "full_mock" and total_marks != Decimal("100"):
+            raise ValueError("Overall mock tests must total exactly 100 marks before publishing.")
 
     @staticmethod
     def _admin_positive_integer(value, field_name, default):

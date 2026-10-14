@@ -22,6 +22,11 @@ class Test(db.Model):
         nullable=True
     )
 
+    instructions = db.Column(
+        db.Text,
+        nullable=True
+    )
+
     test_type = db.Column(
         db.String(30),
         nullable=False,

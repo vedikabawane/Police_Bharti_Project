@@ -7,7 +7,7 @@ class Topic(db.Model):
     __tablename__ = "topics"
 
     id = db.Column(
-        db.BigInteger,
+        db.BigInteger().with_variant(db.Integer, "sqlite"),
         primary_key=True,
         autoincrement=True
     )

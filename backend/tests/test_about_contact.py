@@ -65,7 +65,9 @@ class AboutContactApiTest(unittest.TestCase):
         self.assertEqual(updated.get_json()["data"]["mission"], "Updated mission")
 
     def test_public_contact_settings_and_unsafe_map_url(self):
-        self.assertEqual(self.client.get("/api/public/contact").status_code, 404)
+        missing = self.client.get("/api/public/contact")
+        self.assertEqual(missing.status_code, 200)
+        self.assertEqual(missing.get_json(), {"success": True, "data": {}})
         invalid = {**CONTACT, "map_url": "javascript:alert(1)"}
         response = self.client.post("/api/admin/contact-settings", json=invalid, headers=self.headers(2))
         self.assertEqual(response.status_code, 422)
@@ -73,6 +75,10 @@ class AboutContactApiTest(unittest.TestCase):
         public = self.client.get("/api/public/contact").get_json()["data"]
         self.assertEqual(public["map_url"], "https://maps.example.test")
         self.assertNotIn("is_active", public)
+        self.client.patch("/api/admin/contact-settings/status", json={"is_active": False}, headers=self.headers(2))
+        inactive = self.client.get("/api/public/contact")
+        self.assertEqual(inactive.status_code, 200)
+        self.assertEqual(inactive.get_json(), {"success": True, "data": {}})
 
     def test_contact_settings_permissions(self):
         self.assertEqual(self.client.post("/api/admin/contact-settings", json=CONTACT, headers=self.headers(1)).status_code, 403)

@@ -29,6 +29,12 @@ class TestQuestion(db.Model):
         nullable=False
     )
 
+    is_admin_created = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False
+    )
+
     test = db.relationship(
         "Test",
         back_populates="questions"

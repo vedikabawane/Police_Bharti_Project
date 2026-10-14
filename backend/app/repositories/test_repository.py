@@ -273,13 +273,23 @@ class TestRepository:
         if test_type is not None:
             query = query.filter(Test.test_type == test_type)
         if subject_id is not None:
-            query = query.filter(Test.subject_id == subject_id)
+            query = query.filter(or_(
+                Test.subject_id == subject_id,
+                Test.questions.any(
+                    TestQuestion.question.has(Question.subject_id == subject_id)
+                ),
+            ))
         if topic_id is not None:
-            query = query.filter(Test.topic_id == topic_id)
+            query = query.filter(or_(
+                Test.topic_id == topic_id,
+                Test.questions.any(
+                    TestQuestion.question.has(Question.topic_id == topic_id)
+                ),
+            ))
         if is_active is not None:
             query = query.filter(Test.is_active == is_active)
 
-        total = query.order_by(None).count()
+        total = query.order_by(None).distinct().count()
         tests = query.order_by(
             Test.created_at.desc(), Test.id.desc()
         ).offset((page - 1) * per_page).limit(per_page).all()
@@ -304,6 +314,16 @@ class TestRepository:
     @staticmethod
     def delete_test(test):
         try:
+            managed_question_ids = [
+                row.question_id
+                for row in TestQuestion.query.filter_by(
+                    test_id=test.id, is_admin_created=True
+                ).all()
+            ]
+            TestQuestion.query.filter_by(test_id=test.id).delete(
+                synchronize_session=False
+            )
+            TestRepository._delete_unused_managed_questions(managed_question_ids)
             db.session.delete(test)
             db.session.commit()
         except Exception:
@@ -311,13 +331,28 @@ class TestRepository:
             raise
 
     @staticmethod
-    def create_admin_test(data, questions):
+    def _delete_unused_managed_questions(question_ids):
+        for question_id in question_ids:
+            has_other_test = TestQuestion.query.filter(
+                TestQuestion.question_id == question_id
+            ).first() is not None
+            has_answers = TestAnswer.query.filter_by(
+                question_id=question_id
+            ).first() is not None
+            if not has_other_test and not has_answers:
+                question = Question.query.get(question_id)
+                if question is not None:
+                    db.session.delete(question)
+
+    @staticmethod
+    def create_admin_test(data, questions, owned_question_ids=None):
         test = Test(**data)
         test.total_questions = len(questions)
         test.total_marks = sum(
             (max(Decimal("0"), Decimal(str(question.marks))) for question in questions),
             start=Decimal("0"),
         )
+        owned_question_ids = set(owned_question_ids or ())
         try:
             db.session.add(test)
             db.session.flush()
@@ -326,6 +361,7 @@ class TestRepository:
                     test_id=test.id,
                     question_id=question.id,
                     question_order=order,
+                    is_admin_created=question.id in owned_question_ids,
                 ))
             db.session.commit()
             db.session.expire(test, ["questions"])
@@ -335,11 +371,18 @@ class TestRepository:
         return test
 
     @staticmethod
-    def update_admin_test(test, data, questions=None):
+    def update_admin_test(test, data, questions=None, owned_question_ids=None):
         try:
             for key, value in data.items():
                 setattr(test, key, value)
             if questions is not None:
+                previous_managed_ids = {
+                    row.question_id
+                    for row in TestQuestion.query.filter_by(
+                        test_id=test.id, is_admin_created=True
+                    ).all()
+                }
+                owned_question_ids = set(owned_question_ids or ())
                 TestQuestion.query.filter_by(test_id=test.id).delete(
                     synchronize_session=False
                 )
@@ -348,7 +391,11 @@ class TestRepository:
                         test_id=test.id,
                         question_id=question.id,
                         question_order=order,
+                        is_admin_created=question.id in owned_question_ids,
                     ))
+                TestRepository._delete_unused_managed_questions(
+                    previous_managed_ids - owned_question_ids
+                )
                 test.total_questions = len(questions)
                 test.total_marks = sum(
                     (max(Decimal("0"), Decimal(str(question.marks))) for question in questions),

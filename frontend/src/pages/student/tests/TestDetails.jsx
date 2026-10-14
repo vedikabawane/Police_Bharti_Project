@@ -76,6 +76,7 @@ function TestDetails() {
               <p className="text-sm font-bold text-pb-khaki">{testType}</p>
               <h2 className="mt-2 break-words text-2xl font-extrabold text-pb-green sm:text-3xl">{test.title}</h2>
               {test.description && <p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-6 text-slate-600">{test.description}</p>}
+              {test.instructions && <div className="mt-4 rounded-xl bg-pb-light p-4"><h3 className="text-sm font-extrabold text-pb-green">चाचणीच्या सूचना</h3><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">{test.instructions}</p></div>}
               <dl className="mt-7 grid gap-4 border-t border-pb-border-soft pt-5 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="rounded-xl bg-[#fbfaf7] p-4"><dt className="text-xs font-semibold text-slate-500">विषय</dt><dd className="mt-1 break-words font-bold text-pb-green">{test.subject || "—"}</dd></div>
                 <div className="rounded-xl bg-[#fbfaf7] p-4"><dt className="text-xs font-semibold text-slate-500">विषयघटक</dt><dd className="mt-1 break-words font-bold text-pb-green">{test.topic || "—"}</dd></div>

@@ -166,6 +166,12 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {"hide_parameters": True}
     TRUSTED_PROXY_HOPS = int(os.getenv("TRUSTED_PROXY_HOPS", "0"))
 
+    ADMIN_BOOTSTRAP_ENABLED = _parse_bool("ADMIN_BOOTSTRAP_ENABLED", False)
+    ADMIN_NAME = os.getenv("ADMIN_NAME", "").strip()
+    ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "").strip()
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+    ADMIN_MOBILE = os.getenv("ADMIN_MOBILE", "").strip()
+
     MAIL_ENABLED = os.getenv("MAIL_ENABLED", "false").strip().lower() in {
         "1", "true", "yes", "on"
     }
@@ -216,6 +222,14 @@ class Config:
     )
 
 
+def validate_admin_bootstrap_config(config):
+    """Allow environment-based initial Admin setup only for local development."""
+    if config.get("ADMIN_BOOTSTRAP_ENABLED") and config.get("APP_ENV") != "development":
+        raise ValueError(
+            "ADMIN_BOOTSTRAP_ENABLED is permitted only when APP_ENV=development."
+        )
+
+
 def validate_sms_config(config):
     """Validate SMS settings without including configured values in errors."""
     if not config.get("SMS_ENABLED", False):
@@ -237,5 +251,3 @@ def validate_sms_config(config):
     if provider == "mock":
         raise ValueError("The mock SMS provider cannot be enabled in production.")
     raise ValueError("SMS_PROVIDER has no installed provider adapter.")
-
-

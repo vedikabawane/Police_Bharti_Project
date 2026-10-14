@@ -93,18 +93,20 @@ class AdminTestsTest(unittest.TestCase):
         return {"Authorization": f"Bearer {token}"}
 
     @staticmethod
-    def _create_for_sqlite(data, questions):
+    def _create_for_sqlite(data, questions, owned_question_ids=None):
         test_id = (db.session.query(db.func.max(Test.id)).scalar() or 0) + 1
         test = Test(id=test_id, **data)
         db.session.add(test)
         db.session.flush()
         next_question_id = (db.session.query(db.func.max(TestQuestion.id)).scalar() or 0) + 1
+        owned_question_ids = set(owned_question_ids or ())
         for order, question in enumerate(questions, start=1):
             db.session.add(TestQuestion(
                 id=next_question_id + order - 1,
                 test_id=test.id,
                 question_id=question.id,
                 question_order=order,
+                is_admin_created=question.id in owned_question_ids,
             ))
         db.session.commit()
         return test
@@ -129,11 +131,31 @@ class AdminTestsTest(unittest.TestCase):
         payload.update(overrides)
         return payload
 
+    @staticmethod
+    def _inline_question(question_text, marks="1", subject_id=None, topic_id=None):
+        question = {
+            "question_text": question_text,
+            "options": [
+                {"option_label": label, "option_text": f"{question_text} {label}"}
+                for label in ("A", "B", "C", "D")
+            ],
+            "correct_option": "B",
+            "explanation": "उत्तराचे स्पष्टीकरण",
+            "difficulty": "medium",
+            "marks": marks,
+        }
+        if subject_id is not None:
+            question["subject_id"] = subject_id
+        if topic_id is not None:
+            question["topic_id"] = topic_id
+        return question
+
     def test_admin_authentication_role_and_active_account(self):
-        self.assertEqual(self.client.get("/api/admin/tests").status_code, 401)
-        self.assertEqual(self.client.get("/api/admin/tests", headers=self._headers(1)).status_code, 403)
-        self.assertEqual(self.client.get("/api/admin/tests", headers=self._headers(3)).status_code, 403)
-        self.assertEqual(self.client.get("/api/admin/tests", headers=self._headers(2)).status_code, 200)
+        path = "/api/admin/tests?page=1&per_page=20"
+        self.assertEqual(self.client.get(path).status_code, 401)
+        self.assertEqual(self.client.get(path, headers=self._headers(1)).status_code, 403)
+        self.assertEqual(self.client.get(path, headers=self._headers(3)).status_code, 403)
+        self.assertEqual(self.client.get(path, headers=self._headers(2)).status_code, 200)
         self.assertEqual(self._create(self._payload(), user_id=1).status_code, 403)
         self.assertEqual(self._create(self._payload(), user_id=3).status_code, 403)
 
@@ -161,7 +183,8 @@ class AdminTestsTest(unittest.TestCase):
         for test_type in ("FULL_MOCK", "DAILY", "WEEKLY"):
             with self.subTest(test_type=test_type):
                 response = self._create(self._payload(
-                    title=test_type, test_type=test_type, subject_id=None, question_ids=[1]
+                    title=test_type, test_type=test_type, subject_id=None, question_ids=[1],
+                    is_active=False if test_type == "FULL_MOCK" else True,
                 ))
                 self.assertEqual(response.status_code, 201)
 
@@ -189,6 +212,94 @@ class AdminTestsTest(unittest.TestCase):
         for payload, expected in cases:
             with self.subTest(payload=payload):
                 self.assertEqual(self._create(payload).status_code, expected)
+
+    def test_form_contract_creates_a_valid_inline_draft(self):
+        payload = {
+            "title": "Form contract draft",
+            "description": "Subject practice test.",
+            "instructions": "Read each question carefully.",
+            "test_type": "subject",
+            "subject_id": 1,
+            "topic_id": None,
+            "duration_minutes": 30,
+            "is_active": False,
+            "questions": [
+                {
+                    "question_text": "Inline form contract question",
+                    "subject_id": 1,
+                    "topic_id": 1,
+                    "exam_name": None,
+                    "exam_year": None,
+                    "options": [
+                        {"option_label": label, "option_text": f"Option {label}"}
+                        for label in ("A", "B", "C", "D")
+                    ],
+                    "correct_option": "B",
+                    "explanation": None,
+                    "difficulty": "medium",
+                    "marks": 2,
+                    "is_pyq": False,
+                }
+            ],
+        }
+
+        response = self._create(payload)
+
+        self.assertEqual(response.status_code, 201, response.get_json())
+        data = response.get_json()["data"]
+        self.assertFalse(data["is_active"])
+        self.assertEqual(data["total_questions"], 1)
+        self.assertEqual(Decimal(data["total_marks"]), Decimal("2.00"))
+        self.assertEqual(data["instructions"], payload["instructions"])
+        question = data["questions"][0]["question"]
+        self.assertEqual((question["subject_id"], question["topic_id"]), (1, 1))
+        self.assertEqual(question["correct_option"], "B")
+        self.assertEqual(
+            [option["option_label"] for option in question["options"]],
+            ["A", "B", "C", "D"],
+        )
+
+    def test_create_validation_reports_missing_and_unknown_field_paths(self):
+        valid_payload = {
+            "title": "Validation contract",
+            "test_type": "subject",
+            "subject_id": 1,
+            "duration_minutes": 30,
+            "is_active": False,
+            "questions": [self._inline_question("Validation question", "1", 1, 1)],
+        }
+        test_count = Test.query.count()
+        question_count = Question.query.count()
+
+        missing = dict(valid_payload)
+        missing.pop("title")
+        missing_response = self._create(missing)
+        self.assertEqual(missing_response.status_code, 422)
+        self.assertEqual(
+            missing_response.get_json()["errors"]["title"],
+            ["Missing data for required field."],
+        )
+
+        unknown = dict(valid_payload)
+        unknown["unexpected_field"] = "not accepted"
+        unknown_response = self._create(unknown)
+        self.assertEqual(unknown_response.status_code, 422)
+        self.assertEqual(
+            unknown_response.get_json()["errors"]["unexpected_field"],
+            ["Unknown field."],
+        )
+
+        nested_unknown = dict(valid_payload)
+        nested_unknown["questions"] = [self._inline_question("Nested validation question", "1", 1, 1)]
+        nested_unknown["questions"][0]["negative_marks"] = "0.25"
+        nested_response = self._create(nested_unknown)
+        self.assertEqual(nested_response.status_code, 422)
+        self.assertEqual(
+            nested_response.get_json()["errors"]["questions"]["0"]["negative_marks"],
+            ["Unknown field."],
+        )
+        self.assertEqual(Test.query.count(), test_count)
+        self.assertEqual(Question.query.count(), question_count)
 
     def test_create_enforces_question_scope_and_previous_year_bank(self):
         self.assertEqual(self._create(self._payload(question_ids=[3])).status_code, 400)
@@ -224,7 +335,7 @@ class AdminTestsTest(unittest.TestCase):
         self.assertNotIn("attempts", data["tests"][0])
         self.assertEqual(len(self.client.get(
             "/api/admin/tests?test_type=MIXED&subject_id=1", headers=self._headers(2)
-        ).get_json()["data"]["tests"]), 0)
+        ).get_json()["data"]["tests"]), 1)
         self.assertEqual(len(self.client.get(
             "/api/admin/tests?is_active=false", headers=self._headers(2)
         ).get_json()["data"]["tests"]), 1)
@@ -246,6 +357,145 @@ class AdminTestsTest(unittest.TestCase):
         self.assertEqual(self.client.get(
             "/api/admin/tests/999", headers=self._headers(2)
         ).status_code, 404)
+
+    def test_inline_questions_create_edit_add_remove_and_assign_topic(self):
+        payload = self._payload(
+            title="Direct topic test",
+            test_type="TOPIC",
+            topic_id=1,
+            question_ids=None,
+            questions=[
+                self._inline_question("नवीन प्रश्न १", "2"),
+                self._inline_question("नवीन प्रश्न २", "3"),
+            ],
+            is_active=False,
+        )
+        created_response = self._create(payload)
+        self.assertEqual(created_response.status_code, 201, created_response.get_json())
+        created = created_response.get_json()["data"]
+        self.assertEqual(created["total_questions"], 2)
+        self.assertEqual(Decimal(created["total_marks"]), Decimal("5.00"))
+        self.assertEqual(created["instructions"], None)
+        self.assertTrue(all(row["is_admin_created"] for row in created["questions"]))
+        question_id = created["questions"][0]["question_id"]
+        question = db.session.get(Question, question_id)
+        self.assertEqual((question.subject_id, question.topic_id), (1, 1))
+        self.assertEqual(len(question.options), 4)
+        self.assertEqual(question.options[1].option_text, "नवीन प्रश्न १ B")
+
+        replacement = self._inline_question("प्रश्न संपादित", "4")
+        replacement["id"] = question_id
+        with patch.object(
+            TestRepository, "update_admin_test", side_effect=self._sqlite_update_for_test
+        ):
+            edited = self.client.patch(
+                f"/api/admin/tests/{created['id']}",
+                json={"questions": [replacement], "instructions": "शांतपणे सोडवा"},
+                headers=self._headers(2),
+            )
+        self.assertEqual(edited.status_code, 200, edited.get_json())
+        edited_data = edited.get_json()["data"]
+        self.assertEqual(edited_data["total_questions"], 1)
+        self.assertEqual(Decimal(edited_data["total_marks"]), Decimal("4.00"))
+        self.assertEqual(edited_data["instructions"], "शांतपणे सोडवा")
+        self.assertEqual(edited_data["questions"][0]["question"]["question_text"], "प्रश्न संपादित")
+        self.assertEqual(
+            Question.query.filter_by(question_text="नवीन प्रश्न २").count(), 0
+        )
+
+        added = self._inline_question("संपादनातून जोडलेला प्रश्न", "2")
+        replacement["question_text"] = "प्रश्न संपादित"
+        with patch.object(
+            TestRepository, "update_admin_test", side_effect=self._sqlite_update_for_test
+        ):
+            added_response = self.client.patch(
+                f"/api/admin/tests/{created['id']}",
+                json={"questions": [replacement, added]},
+                headers=self._headers(2),
+            )
+        self.assertEqual(added_response.status_code, 200, added_response.get_json())
+        self.assertEqual(added_response.get_json()["data"]["total_questions"], 2)
+        saved_questions = added_response.get_json()["data"]["questions"]
+        replacement.update({"subject_id": 1, "topic_id": 1})
+        added.update({"subject_id": 1, "topic_id": 1})
+        added["id"] = saved_questions[1]["question_id"]
+        with patch.object(
+            TestRepository, "update_admin_test", side_effect=self._sqlite_update_for_test
+        ):
+            changed_type = self.client.patch(
+                f"/api/admin/tests/{created['id']}",
+                json={
+                    "test_type": "FULL_MOCK",
+                    "subject_id": None,
+                    "topic_id": None,
+                    "is_active": False,
+                    "questions": [replacement, added],
+                },
+                headers=self._headers(2),
+            )
+        self.assertEqual(changed_type.status_code, 200, changed_type.get_json())
+        self.assertTrue(all(
+            row["is_admin_created"]
+            for row in changed_type.get_json()["data"]["questions"]
+        ))
+
+    def test_overall_mock_must_total_100_marks_when_published(self):
+        invalid_payload = self._payload(
+            title="Incomplete mock",
+            test_type="FULL_MOCK",
+            subject_id=None,
+            question_ids=None,
+            questions=[self._inline_question("Mock question", "99", 1, 1)],
+            is_active=True,
+        )
+        question_count = Question.query.count()
+        invalid = self._create(invalid_payload)
+        self.assertEqual(invalid.status_code, 400)
+        self.assertIn("exactly 100 marks", invalid.get_json()["message"])
+        self.assertEqual(Test.query.filter_by(title="Incomplete mock").count(), 0)
+        self.assertEqual(Question.query.count(), question_count)
+
+        draft = self._create(self._payload(
+            title="Mock draft",
+            test_type="FULL_MOCK",
+            subject_id=None,
+            question_ids=None,
+            questions=[self._inline_question("पहिला मॉक प्रश्न", "99", 1, 1)],
+            is_active=False,
+        ))
+        self.assertEqual(draft.status_code, 201, draft.get_json())
+        test_id = draft.get_json()["data"]["id"]
+        publish = self.client.patch(
+            f"/api/admin/tests/{test_id}/status",
+            json={"is_active": True},
+            headers=self._headers(2),
+        )
+        self.assertEqual(publish.status_code, 400)
+        self.assertFalse(db.session.get(Test, test_id).is_active)
+
+        question = self._inline_question("दुसरा मॉक प्रश्न", "1", 2, 3)
+        first = draft.get_json()["data"]["questions"][0]["question"]
+        first_input = self._inline_question(
+            first["question_text"], first["marks"], first["subject_id"], first["topic_id"]
+        )
+        first_input["id"] = first["id"]
+        first_input["options"] = [
+            {"option_label": item["option_label"], "option_text": item["option_text"]}
+            for item in first["options"]
+        ]
+        first_input["correct_option"] = first["correct_option"]
+        first_input["explanation"] = first["explanation"]
+        with patch.object(
+            TestRepository, "update_admin_test", side_effect=self._sqlite_update_for_test
+        ):
+            completed = self.client.patch(
+                f"/api/admin/tests/{test_id}",
+                json={"questions": [first_input, question], "is_active": True},
+                headers=self._headers(2),
+            )
+        self.assertEqual(completed.status_code, 200, completed.get_json())
+        self.assertTrue(completed.get_json()["data"]["is_active"])
+        self.assertEqual(Decimal(completed.get_json()["data"]["total_marks"]), Decimal("100.00"))
 
     def test_update_safe_fields_and_rejects_structural_changes_after_attempt(self):
         created = self._create(self._payload()).get_json()["data"]
@@ -299,10 +549,17 @@ class AdminTestsTest(unittest.TestCase):
         self.assertEqual(Decimal(data["total_marks"]), Decimal("4.00"))
 
     @staticmethod
-    def _sqlite_update_for_test(test, data, questions=None):
+    def _sqlite_update_for_test(test, data, questions=None, owned_question_ids=None):
         for key, value in data.items():
             setattr(test, key, value)
         if questions is not None:
+            previous_managed_ids = {
+                row.question_id
+                for row in TestQuestion.query.filter_by(
+                    test_id=test.id, is_admin_created=True
+                ).all()
+            }
+            owned_question_ids = set(owned_question_ids or ())
             TestQuestion.query.filter_by(test_id=test.id).delete(synchronize_session=False)
             next_id = (db.session.query(db.func.max(TestQuestion.id)).scalar() or 0) + 1
             for order, question in enumerate(questions, start=1):
@@ -311,7 +568,11 @@ class AdminTestsTest(unittest.TestCase):
                     test_id=test.id,
                     question_id=question.id,
                     question_order=order,
+                    is_admin_created=question.id in owned_question_ids,
                 ))
+            TestRepository._delete_unused_managed_questions(
+                previous_managed_ids - owned_question_ids
+            )
             test.total_questions = len(questions)
             test.total_marks = sum((q.marks for q in questions), start=Decimal("0"))
         db.session.commit()

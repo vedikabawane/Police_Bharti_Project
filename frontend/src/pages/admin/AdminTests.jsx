@@ -225,7 +225,7 @@ function AdminTests() {
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-pb-khaki">प्रशासन</p>
           <h1 className="mt-2 text-2xl font-extrabold text-pb-green sm:text-3xl">चाचणी व्यवस्थापन</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">प्रश्नसंचातील प्रश्न वापरून चाचण्या तयार करा आणि व्यवस्थापित करा.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">चाचणी तयार करा, प्रश्न थेट जोडा आणि प्रकाशनापूर्वी संपूर्ण प्रश्नपत्रिका तपासा.</p>
         </div>
         <Link to="/admin/tests/new" className="inline-flex shrink-0 items-center justify-center rounded-lg bg-pb-green px-4 py-2.5 text-sm font-bold text-white transition hover:bg-pb-khaki">＋ नवीन चाचणी</Link>
       </div>

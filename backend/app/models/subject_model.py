@@ -7,7 +7,7 @@ class Subject(db.Model):
     __tablename__ = "subjects"
 
     id = db.Column(
-        db.BigInteger,
+        db.BigInteger().with_variant(db.Integer, "sqlite"),
         primary_key=True,
         autoincrement=True
     )

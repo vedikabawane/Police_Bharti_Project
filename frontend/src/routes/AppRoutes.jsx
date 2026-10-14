@@ -28,7 +28,6 @@ import AdminStudents from "../pages/admin/AdminStudents";
 import AdminStudentDetail from "../pages/admin/AdminStudentDetail";
 import AdminSubjects from "../pages/admin/AdminSubjects";
 import AdminTopics from "../pages/admin/AdminTopics";
-import AdminQuestions from "../pages/admin/AdminQuestions";
 import AdminNotes from "../pages/admin/AdminNotes";
 import AdminStudyMaterials from "../pages/admin/AdminStudyMaterials";
 import AdminCurrentAffairs from "../pages/admin/AdminCurrentAffairs";
@@ -122,10 +121,6 @@ function AppRoutes() {
             <Route
               path="/admin/topics"
               element={<AdminTopics />}
-            />
-            <Route
-              path="/admin/questions"
-              element={<AdminQuestions />}
             />
             <Route
               path="/admin/test-attempts"

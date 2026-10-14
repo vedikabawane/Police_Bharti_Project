@@ -7,12 +7,14 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.config.config import (
     Config,
+    validate_admin_bootstrap_config,
     validate_production_config,
     validate_sms_config,
 )
 from app.extensions import db, migrate, jwt
 from app.logging_config import configure_logging
 from app.models import User
+from app.commands import register_admin_password_reset_command
 
 from app.controllers.auth_controller import auth_bp
 from app.controllers.student_controller import student_bp
@@ -81,6 +83,7 @@ def create_app():
     app.config.from_object(Config)
     configure_logging(app)
     validate_production_config(app.config)
+    validate_admin_bootstrap_config(app.config)
     validate_sms_config(app.config)
 
     trusted_proxy_hops = app.config["TRUSTED_PROXY_HOPS"]
@@ -114,6 +117,19 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    register_admin_password_reset_command(app)
+    if app.config.get("ADMIN_BOOTSTRAP_ENABLED", False):
+        from app.services.admin_bootstrap_service import (
+            AdminBootstrapError,
+            bootstrap_initial_admin,
+        )
+
+        with app.app_context():
+            try:
+                bootstrap_initial_admin()
+            except AdminBootstrapError:
+                app.logger.error("Initial Admin bootstrap could not be completed.")
+                raise
 
     # Development defaults are local Vite only; production origins must be explicit.
     CORS(
