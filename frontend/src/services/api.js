@@ -2,7 +2,9 @@ import axios from "axios";
 import { logApiFailure } from "./apiErrorLogging";
 
 const DEVELOPMENT_API_BASE_URL = import.meta.env.DEV
-  ? "http://127.0.0.1:5000/api"
+  ? typeof window !== "undefined" && window.location.origin
+    ? `${window.location.origin}/api`
+    : "http://127.0.0.1:5000/api"
   : null;
 
 function resolveApiBaseURL() {
