@@ -92,14 +92,23 @@ function StudentTests() {
 
   return (
     <div className="min-h-screen bg-pb-light">
-      <header className="border-b border-pb-border bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-4 py-8 sm:px-6 lg:px-8">
+      <header className="border-b border-pb-border/70 bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-3.5 py-4 sm:px-6 sm:py-6 lg:px-8">
           <div>
-            <p className="text-sm font-bold text-pb-khaki">सराव चाचण्या</p>
-            <h1 className="mt-2 text-2xl font-extrabold text-pb-green sm:text-3xl">उपलब्ध चाचण्या</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">चाचणी निवडा आणि परीक्षेची तयारी सुरू करा.</p>
+            <div className="flex items-center gap-2 text-xs font-bold text-pb-khaki">
+              <Link to="/student/dashboard" className="hover:underline">Dashboard</Link>
+              <span>/</span>
+              <span className="text-slate-500">सराव चाचण्या</span>
+            </div>
+            <h1 className="mt-1 text-xl font-extrabold text-pb-green sm:text-2xl lg:text-3xl">उपलब्ध चाचण्या</h1>
+            <p className="mt-1 max-w-2xl text-xs sm:text-sm text-slate-500">चाचणी निवडा आणि परीक्षेची तयारी सुरू करा.</p>
           </div>
-          <div aria-hidden="true" className="hidden h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-pb-green text-3xl text-white shadow-lg sm:flex">📝</div>
+          <Link
+            to="/student/tests/history"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-pb-border bg-white px-3.5 py-2 text-xs font-bold text-pb-green shadow-xs transition hover:bg-pb-light active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
+          >
+            <span>माझा इतिहास 📜</span>
+          </Link>
         </div>
       </header>
 
@@ -158,7 +167,13 @@ function StudentTests() {
                     <div><dt className="text-xs font-semibold text-slate-500">प्रश्न</dt><dd className="mt-1 font-bold text-pb-green">{test.question_count}</dd></div>
                     <div><dt className="text-xs font-semibold text-slate-500">एकूण गुण</dt><dd className="mt-1 font-bold text-pb-green">{test.total_marks}</dd></div>
                   </dl>
-                  <Link to={`/student/tests/${test.id}`} className="mt-6 inline-flex items-center justify-center rounded-xl bg-pb-green px-5 py-3 text-sm font-bold text-white transition hover:bg-pb-khaki focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pb-khaki">चाचणी पहा <span aria-hidden="true" className="ml-2">→</span></Link>
+                  <Link
+                    to={`/student/tests/${test.id}`}
+                    style={{ color: "#ffffff", backgroundColor: "#26351e" }}
+                    className="mt-6 inline-flex items-center justify-center rounded-xl bg-pb-green px-5 py-3 text-sm font-bold text-white shadow-xs transition hover:bg-pb-khaki active:scale-95"
+                  >
+                    चाचणी सुरू करा <span aria-hidden="true" className="ml-2">→</span>
+                  </Link>
                 </article>
               ))}
             </div>

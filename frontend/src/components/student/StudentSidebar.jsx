@@ -217,17 +217,11 @@ function StudentSidebar({ isOpen, onClose }) {
         />
       )}
 
-      {/* ================= SIDEBAR ================= */}
+      {/* ================= SIDEBAR (Desktop) ================= */}
       <aside
         id="student-sidebar"
         aria-label="Student navigation sidebar"
-        className={`
-          pb-student-sidebar fixed top-0 left-0 z-50 flex h-dvh w-72 max-w-[85vw]
-          flex-col overflow-hidden border-r border-pb-border bg-white
-          transition-transform duration-300 ease-out
-          lg:sticky lg:top-0 lg:z-30 lg:max-w-none
-          ${isOpen ? "animate-drawer-in translate-x-0" : "-translate-x-full lg:translate-x-0"}
-        `}
+        className="pb-student-sidebar hidden lg:sticky lg:top-0 lg:z-30 lg:flex lg:h-dvh lg:w-72 lg:shrink-0 lg:flex-col lg:overflow-hidden lg:border-r lg:border-pb-border lg:bg-white"
       >
         {/* Animated accent line */}
         <span
@@ -236,20 +230,20 @@ function StudentSidebar({ isOpen, onClose }) {
         />
 
         {/* ================= LOGO ================= */}
-        <div className="relative flex h-18 shrink-0 items-center justify-between border-b border-pb-border-soft px-5">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-pb-green to-[#0f3d2e] text-white shadow-md">
+        <div className="relative flex h-16 sm:h-18 shrink-0 items-center justify-between border-b border-pb-border-soft px-4 sm:px-5">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <span className="relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-gradient-to-br from-pb-green to-[#0f3d2e] text-white shadow-md">
               <span
                 aria-hidden="true"
                 className="animate-soft-glow pointer-events-none absolute -inset-1 rounded-2xl bg-pb-khaki/30 blur-md"
               />
-              <ShieldIcon className="relative h-6 w-6" />
+              <ShieldIcon className="relative h-5 w-5 sm:h-6 sm:w-6" />
             </span>
             <div>
-              <h2 className="text-sm leading-tight font-extrabold text-pb-green">
+              <h2 className="text-xs sm:text-sm leading-tight font-extrabold text-pb-green">
                 Police Bharti
               </h2>
-              <p className="mt-0.5 text-[10px] font-bold tracking-[0.15em] text-pb-khaki uppercase">
+              <p className="mt-0.5 text-[9px] sm:text-[10px] font-bold tracking-[0.15em] text-pb-khaki uppercase">
                 Student Panel
               </p>
             </div>
@@ -260,30 +254,30 @@ function StudentSidebar({ isOpen, onClose }) {
             type="button"
             onClick={onClose}
             aria-label="Close student navigation"
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-pb-light text-pb-green transition-all duration-200 hover:border-pb-khaki hover:bg-[#ebe7da] focus-visible:ring-2 focus-visible:ring-pb-khaki focus-visible:outline-none active:scale-95 lg:hidden"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg border border-pb-border bg-pb-light text-pb-green transition-all duration-200 hover:border-pb-khaki hover:bg-[#ebe7da] focus-visible:ring-2 focus-visible:ring-pb-khaki focus-visible:outline-none active:scale-95 lg:hidden"
           >
-            <CloseIcon className="h-5 w-5" />
+            <CloseIcon className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
         {/* ================= NAVIGATION ================= */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6">
-          <nav aria-label="Student navigation" className="space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6">
+          <nav aria-label="Student navigation" className="space-y-4 sm:space-y-6">
             {navigationGroups.map((group, groupIndex) => (
               <section
                 key={group.label}
                 className="animate-group-in"
-                style={{ animationDelay: `${Math.min(groupIndex * 50, 300)}ms` }}
+                style={{ animationDelay: `${Math.min(groupIndex * 40, 240)}ms` }}
               >
                 {/* Group label with soft rule */}
-                <div className="mb-3 flex items-center gap-2 px-3">
-                  <span className="text-[10px] font-extrabold tracking-[0.18em] text-slate-400 uppercase">
+                <div className="mb-2 sm:mb-3 flex items-center gap-2 px-2.5 sm:px-3">
+                  <span className="text-[9px] sm:text-[10px] font-extrabold tracking-[0.18em] text-slate-400 uppercase">
                     {group.label}
                   </span>
                   <span className="h-px flex-1 bg-gradient-to-r from-pb-border to-transparent" />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1 sm:space-y-1.5">
                   {group.items.map((item) => {
                     const Icon = item.icon;
                     const isSub = item.isSubItem;
@@ -296,15 +290,18 @@ function StudentSidebar({ isOpen, onClose }) {
                           pathname === "/student/tests/history"
                         }
                         onClick={onClose}
+                        style={({ isActive }) => ({
+                          color: isActive ? "#ffffff" : undefined,
+                        })}
                         className={({ isActive }) =>
                           [
-                            "group relative flex items-center gap-3 rounded-xl font-bold transition-all duration-200",
+                            "group relative flex items-center gap-2.5 sm:gap-3 rounded-xl font-bold transition-all duration-200",
                             isSub
-                              ? "ml-9 w-[calc(100%-2.25rem)] px-3 py-2 text-xs"
-                              : "px-3 py-2.5 text-sm",
+                              ? "ml-7 sm:ml-9 w-[calc(100%-1.75rem)] sm:w-[calc(100%-2.25rem)] px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs"
+                              : "px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm",
                             isActive
-                              ? "bg-gradient-to-r from-pb-khaki to-[#c9b95f] text-white shadow-md"
-                              : "text-pb-green hover:bg-pb-neutral hover:text-pb-green active:scale-[0.99]",
+                              ? "bg-gradient-to-r from-pb-khaki to-[#b8a64e] !text-white shadow-sm"
+                              : "text-pb-green hover:bg-pb-neutral/70 hover:text-pb-green active:scale-[0.99]",
                           ].join(" ")
                         }
                       >
@@ -313,21 +310,21 @@ function StudentSidebar({ isOpen, onClose }) {
                             {/* Active side accent */}
                             <span
                               aria-hidden="true"
-                              className={`absolute top-1/2 -left-1 h-6 w-1 -translate-y-1/2 rounded-full bg-pb-khaki transition-all duration-300 ${
+                              className={`absolute top-1/2 -left-1 h-5 sm:h-6 w-1 -translate-y-1/2 rounded-full bg-pb-khaki transition-all duration-300 ${
                                 isActive ? "opacity-100" : "opacity-0 group-hover:opacity-40"
                               }`}
                             />
 
                             <span
                               className={`flex shrink-0 items-center justify-center rounded-lg transition-all duration-200 ${
-                                isSub ? "h-6 w-6" : "h-8 w-8"
+                                isSub ? "h-5 w-5 sm:h-6 sm:w-6" : "h-7 w-7 sm:h-8 sm:w-8"
                               } ${
                                 isActive
                                   ? "bg-white/20 text-white"
                                   : "bg-pb-light text-pb-green group-hover:bg-white group-hover:text-pb-khaki"
                               }`}
                             >
-                              <Icon className={isSub ? "h-3.5 w-3.5" : "h-4 w-4"} />
+                              <Icon className={isSub ? "h-3 w-3 sm:h-3.5 sm:w-3.5" : "h-3.5 w-3.5 sm:h-4 sm:w-4"} />
                             </span>
 
                             <span className="min-w-0 flex-1 truncate">
@@ -344,7 +341,7 @@ function StudentSidebar({ isOpen, onClose }) {
                                 strokeWidth="2.2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                className={`h-3.5 w-3.5 shrink-0 transition-all duration-200 ${
+                                className={`h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0 transition-all duration-200 ${
                                   isActive
                                     ? "translate-x-0 opacity-100"
                                     : "-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-70"
@@ -365,22 +362,22 @@ function StudentSidebar({ isOpen, onClose }) {
         </div>
 
         {/* ================= BOTTOM GOAL CARD ================= */}
-        <div className="shrink-0 border-t border-pb-border-soft p-4">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-pb-light via-white to-pb-light p-4 shadow-sm">
+        <div className="shrink-0 border-t border-pb-border-soft p-3 sm:p-4">
+          <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-pb-light via-white to-pb-light p-3 sm:p-4 shadow-xs">
             {/* Accent bar */}
             <span
               aria-hidden="true"
               className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-pb-green via-pb-khaki to-pb-green"
             />
-            <div className="flex items-center gap-3">
-              <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pb-khaki to-[#c9b95f] text-white shadow-sm">
-                <TargetIcon className="h-5 w-5" />
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <span className="relative flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-pb-khaki to-[#c9b95f] text-white shadow-xs">
+                <TargetIcon className="h-4 w-4 sm:h-5 sm:w-5" />
               </span>
               <div className="min-w-0">
-                <p className="text-xs font-extrabold text-pb-green">
+                <p className="text-[11px] sm:text-xs font-extrabold text-pb-green">
                   तुमचे लक्ष्य
                 </p>
-                <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                <p className="mt-0.5 text-[10px] sm:text-[11px] leading-snug text-slate-500">
                   सातत्याने अभ्यास करा
                 </p>
               </div>

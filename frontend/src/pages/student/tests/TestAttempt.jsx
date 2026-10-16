@@ -391,24 +391,57 @@ function TestAttempt() {
               {answerStatus[currentQuestion.question_id] === "saving" && <p role="status" className="mt-4 text-sm font-semibold text-pb-khaki">उत्तर जतन होत आहे... (Saving...)</p>}
               {answerErrors[currentQuestion.question_id] && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"><p className="font-semibold">⚠ उत्तर जतन झाले नाही (Not saved): {answerErrors[currentQuestion.question_id]}</p><button type="button" onClick={() => retryAnswer(currentQuestion.question_id)} disabled={!canAnswer} className="mt-2 font-bold underline disabled:opacity-50">पुन्हा जतन करा (Retry)</button></div>}
               {(answerStatus[currentQuestion.question_id] === "saved" || answerStatus[currentQuestion.question_id] === "cleared") && <p role="status" className="mt-4 text-sm font-semibold text-pb-green">✓ उत्तर जतन झाले (Saved)</p>}
-              <div className="mt-8 flex flex-col gap-3 border-t border-pb-border-soft pt-5 sm:flex-row sm:items-center sm:justify-between">
-                <button type="button" onClick={() => navigateToQuestion(currentQuestionIndex - 1)} disabled={currentQuestionIndex === 0} className="min-h-11 rounded-xl border border-[#d8d1bf] px-5 py-3 text-sm font-bold text-pb-green hover:bg-pb-light disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
-                <button type="button" onClick={() => navigateToQuestion(currentQuestionIndex + 1)} disabled={currentQuestionIndex === questions.length - 1} className="min-h-11 rounded-xl bg-pb-green px-5 py-3 text-sm font-bold text-white hover:bg-pb-khaki disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+              <div className="mt-8 flex items-center justify-between gap-3 border-t border-pb-border-soft pt-5">
+                <button
+                  type="button"
+                  onClick={() => navigateToQuestion(currentQuestionIndex - 1)}
+                  disabled={currentQuestionIndex === 0}
+                  className="flex-1 min-h-[44px] rounded-xl border border-pb-border bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-pb-green shadow-xs transition hover:bg-pb-light active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 text-center"
+                >
+                  ← मागील प्रश्न
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateToQuestion(currentQuestionIndex + 1)}
+                  disabled={currentQuestionIndex === questions.length - 1}
+                  style={{ color: "#ffffff", backgroundColor: "#26351e" }}
+                  className="flex-1 min-h-[44px] rounded-xl bg-pb-green px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition hover:bg-pb-khaki active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 text-center"
+                >
+                  पुढील प्रश्न →
+                </button>
               </div>
             </section>
 
-            <aside className="h-fit rounded-2xl bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-extrabold text-pb-green">Question navigation</h2>
-              <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-slate-600" aria-label="Question state legend">
-                <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-pb-green" />Current</span>
-                <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm border border-green-200 bg-green-50" />Answered</span>
-                <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm border border-pb-border bg-white" />Unanswered</span>
+            <aside className="h-fit rounded-2xl bg-white p-4 sm:p-5 shadow-xs border border-pb-border/70">
+              <h2 className="text-sm font-extrabold text-pb-green">प्रश्नांची यादी (Question Palette)</h2>
+              <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-slate-600" aria-label="Question state legend">
+                <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-pb-green" />चालू</span>
+                <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm border border-green-200 bg-green-100" />सोडवलेले</span>
+                <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm border border-pb-border bg-white" />बाकी</span>
               </div>
-              <div className="mt-4 grid grid-cols-5 gap-2 sm:grid-cols-8 lg:grid-cols-4">
+              <div className="mt-3.5 grid grid-cols-5 gap-1.5 sm:grid-cols-8 lg:grid-cols-4">
                 {questions.map((question, index) => {
                   const isCurrent = index === currentQuestionIndex;
                   const isAnswered = Boolean(selectedAnswers[question.question_id]) && savedAnswers[question.question_id] === selectedAnswers[question.question_id];
-                  return <button key={question.question_id} type="button" onClick={() => navigateToQuestion(index)} aria-current={isCurrent ? "step" : undefined} aria-label={`Question ${question.question_number}${isCurrent ? ", current" : ""}, ${isAnswered ? "answered" : "unanswered"}`} className={`min-h-11 rounded-lg border text-sm font-extrabold transition ${isCurrent ? "border-pb-khaki bg-pb-green text-white" : isAnswered ? "border-green-200 bg-green-50 text-pb-green" : "border-pb-border bg-white text-slate-500 hover:border-pb-khaki"}`}>{question.question_number}</button>;
+                  return (
+                    <button
+                      key={question.question_id}
+                      type="button"
+                      onClick={() => navigateToQuestion(index)}
+                      aria-current={isCurrent ? "step" : undefined}
+                      aria-label={`Question ${question.question_number}${isCurrent ? ", current" : ""}, ${isAnswered ? "answered" : "unanswered"}`}
+                      style={isCurrent ? { color: "#ffffff", backgroundColor: "#26351e", borderColor: "#26351e" } : {}}
+                      className={`min-h-[40px] rounded-lg border text-xs sm:text-sm font-black transition active:scale-95 ${
+                        isCurrent
+                          ? "border-pb-green bg-pb-green text-white shadow-xs"
+                          : isAnswered
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                            : "border-pb-border bg-white text-slate-600 hover:border-pb-khaki"
+                      }`}
+                    >
+                      {question.question_number}
+                    </button>
+                  );
                 })}
               </div>
               <p className="mt-5 border-t border-pb-border-soft pt-4 text-xs leading-5 text-slate-500">सबमिट केल्यानंतर तुमची उत्तरे बदलता येणार नाहीत.</p>

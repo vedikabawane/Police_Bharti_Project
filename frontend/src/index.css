@@ -252,6 +252,31 @@ a {
   text-decoration: none;
 }
 
+/* Ensure text color utilities on anchors, buttons, and links always take precedence */
+a.text-white,
+a[class*="text-white"],
+button.text-white,
+button[class*="text-white"],
+.text-white {
+  color: #ffffff !important;
+}
+
+a.text-pb-green,
+a[class*="text-pb-green"],
+button.text-pb-green,
+button[class*="text-pb-green"],
+.text-pb-green {
+  color: #26351e !important;
+}
+
+a.text-pb-khaki,
+a[class*="text-pb-khaki"],
+button.text-pb-khaki,
+button[class*="text-pb-khaki"],
+.text-pb-khaki {
+  color: #7b6f35 !important;
+}
+
 img,
 svg,
 video {

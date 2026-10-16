@@ -159,11 +159,11 @@ function MetricTable({ rows, columns, emptyText }) {
     <div className="overflow-hidden rounded-xl border border-pb-border-soft">
       <div className="divide-y divide-pb-border-soft bg-white md:hidden">
         {rows.map((row, index) => (
-          <article key={row.topic_id || row.subject_id || row.attempt_id || index} className="space-y-3 p-4">
+          <article key={row.topic_id || row.subject_id || row.attempt_id || index} className="p-3.5 space-y-2">
             {columns.map((column) => (
-              <div key={column.key} className="flex min-w-0 flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
-                <span className="text-xs font-bold text-slate-500">{column.label}</span>
-                <span className="min-w-0 break-words text-sm font-semibold text-pb-green sm:text-right">{column.render ? column.render(row) : row[column.key] ?? "—"}</span>
+              <div key={column.key} className="flex min-w-0 justify-between gap-3 text-xs sm:text-sm">
+                <span className="font-semibold text-slate-500">{column.label}</span>
+                <span className="font-extrabold text-pb-green text-right">{column.render ? column.render(row) : row[column.key] ?? "—"}</span>
               </div>
             ))}
           </article>
@@ -333,7 +333,7 @@ function Performance() {
               तुमच्या Police Bharti तयारीची संपूर्ण प्रगती येथे पहा.
             </p>
           </div>
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-pb-green text-3xl text-white shadow-lg">
+          <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-pb-green text-3xl text-white shadow-lg">
             📊
           </div>
         </div>

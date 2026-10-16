@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
   getUnreadCount,
@@ -7,6 +7,16 @@ import {
 } from "../../services/notificationService";
 
 /* ---------- SVG ICON SET ---------- */
+const iconProps = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "1.8",
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  "aria-hidden": "true",
+};
+
 const ShieldIcon = (props) => (
   <svg
     aria-hidden="true"
@@ -71,7 +81,95 @@ const ChevronIcon = (props) => (
   </svg>
 );
 
-function StudentNavbar({ onMenuClick, isSidebarOpen }) {
+const DashboardIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <rect x="3" y="3" width="7" height="9" rx="1.5" />
+    <rect x="14" y="3" width="7" height="5" rx="1.5" />
+    <rect x="14" y="12" width="7" height="9" rx="1.5" />
+    <rect x="3" y="16" width="7" height="5" rx="1.5" />
+  </svg>
+);
+const BookIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 0-2 2Z" />
+    <path d="M18 3v18" />
+  </svg>
+);
+const GlobeIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18" />
+  </svg>
+);
+const NewspaperIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <path d="M4 5h13a2 2 0 0 1 2 2v11a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2Z" />
+    <path d="M8 9h8M8 13h8M8 17h5" />
+  </svg>
+);
+const FileStackIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <path d="M8 4h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8Z" />
+    <path d="M5 8v10a2 2 0 0 0 2 2" />
+    <path d="M11 8h5M11 12h5" />
+  </svg>
+);
+const PencilIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <path d="m4 20 4-1 10-10a2 2 0 0 0-3-3L5 16l-1 4Z" />
+    <path d="m14 6 3 3" />
+  </svg>
+);
+const HistoryIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <path d="M3 12a9 9 0 1 0 3-6.7" />
+    <path d="M3 4v5h5" />
+    <path d="M12 8v4l3 2" />
+  </svg>
+);
+const RunIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <circle cx="15" cy="4.5" r="1.8" />
+    <path d="m5 20 3-6 3 2 3-1" />
+    <path d="m13 10-3 3-3-5" />
+    <path d="M14 15l3 5" />
+  </svg>
+);
+const TrendingIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <path d="m3 17 5-5 4 3 8-8" />
+    <path d="M14 7h6v6" />
+  </svg>
+);
+const BotIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <rect x="4" y="8" width="16" height="12" rx="3" />
+    <path d="M12 4v4M9 14h.01M15 14h.01" />
+    <path d="M2 13v2M22 13v2" />
+  </svg>
+);
+const UserIcon = (p) => (
+  <svg {...iconProps} {...p}>
+    <circle cx="12" cy="8" r="3.5" />
+    <path d="M5 20a7 7 0 0 1 14 0" />
+  </svg>
+);
+
+const studentSubNavItems = [
+  { label: "Dashboard", icon: DashboardIcon, path: "/student/dashboard", end: true },
+  { label: "अभ्यास", icon: BookIcon, path: "/student/study" },
+  { label: "सराव चाचण्या", icon: PencilIcon, path: "/student/tests", end: true },
+  { label: "चाचणी इतिहास", icon: HistoryIcon, path: "/student/tests/history" },
+  { label: "चालू घडामोडी", icon: GlobeIcon, path: "/student/current-affairs" },
+  { label: "शारीरिक", icon: RunIcon, path: "/student/physical" },
+  { label: "भरती सूचना", icon: NewspaperIcon, path: "/student/recruitment-notices" },
+  { label: "मागील प्रश्न", icon: FileStackIcon, path: "/student/previous-year" },
+  { label: "कामगिरी", icon: TrendingIcon, path: "/student/performance" },
+  { label: "AI सहाय्यक", icon: BotIcon, path: "/student/ai-assistant" },
+  { label: "प्रोफाइल", icon: UserIcon, path: "/student/profile" },
+];
+
+function StudentNavbar() {
   const { user, logout } = useAuth();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -150,6 +248,8 @@ function StudentNavbar({ onMenuClick, isSidebarOpen }) {
         .animate-badge-pulse { animation: badgePulse 2.4s ease-out infinite; }
         .animate-soft-glow { animation: softGlow 4.5s ease-in-out infinite; }
         .animate-dropdown { animation: dropdownIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @media (prefers-reduced-motion: reduce) {
           .animate-nav-item, .animate-gradient, .animate-badge-pulse,
           .animate-soft-glow, .animate-dropdown { animation: none !important; }
@@ -162,60 +262,29 @@ function StudentNavbar({ onMenuClick, isSidebarOpen }) {
         className="animate-gradient pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-pb-green via-pb-khaki to-pb-green opacity-70"
       />
 
-      <div className="relative flex h-18 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="relative flex h-16 sm:h-18 items-center justify-between gap-2.5 sm:gap-3 px-3.5 sm:px-6 lg:px-8">
 
         {/* ================= LEFT ================= */}
-        <div className="flex min-w-0 items-center gap-3">
-
-          {/* Mobile Menu Toggle */}
-          <button
-            type="button"
-            onClick={onMenuClick}
-            aria-expanded={isSidebarOpen}
-            aria-controls="student-sidebar"
-            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-all duration-200 focus-visible:ring-2 focus-visible:ring-pb-khaki focus-visible:outline-none active:scale-95 lg:hidden ${
-              isSidebarOpen
-                ? "border-pb-khaki bg-pb-light text-pb-khaki"
-                : "border-transparent bg-pb-light text-pb-green hover:border-pb-khaki hover:bg-[#ebe7da]"
-            }`}
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              className="h-5 w-5"
-            >
-              {isSidebarOpen ? (
-                <path d="m6 6 12 12M18 6 6 18" />
-              ) : (
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
-
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           {/* Brand */}
           <Link
             to="/student/dashboard"
             aria-label="Police Bharti student dashboard"
-            className="group flex min-w-0 shrink-0 items-center gap-3"
+            className="group flex min-w-0 shrink-0 items-center gap-2 sm:gap-3"
           >
-            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pb-green to-[#0f3d2e] text-white shadow-md transition-transform duration-300 group-hover:scale-105">
+            <span className="relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pb-green to-[#0f3d2e] text-white shadow-md transition-transform duration-300 group-hover:scale-105">
               <span
                 aria-hidden="true"
                 className="animate-soft-glow pointer-events-none absolute -inset-1 rounded-2xl bg-pb-khaki/30 blur-md"
               />
-              <ShieldIcon className="relative h-6 w-6" />
+              <ShieldIcon className="relative h-5 w-5 sm:h-6 sm:w-6" />
             </span>
 
-            <div className="hidden min-w-0 sm:block">
-              <h1 className="truncate text-base leading-tight font-extrabold text-pb-green transition-colors duration-200 group-hover:text-pb-khaki">
+            <div className="min-w-0">
+              <h1 className="truncate text-sm sm:text-base leading-tight font-extrabold text-pb-green transition-colors duration-200 group-hover:text-pb-khaki">
                 Police Bharti
               </h1>
-              <p className="mt-0.5 text-[10px] font-bold tracking-[0.15em] text-pb-khaki uppercase">
+              <p className="mt-0.5 hidden text-[10px] font-bold tracking-[0.15em] text-pb-khaki uppercase sm:block">
                 Student Panel
               </p>
             </div>
@@ -229,7 +298,7 @@ function StudentNavbar({ onMenuClick, isSidebarOpen }) {
           <Link
             to="/student/notifications"
             aria-label={unreadCount ? `Notifications, ${unreadCount} unread` : "Notifications"}
-            className="group relative flex h-11 w-11 items-center justify-center rounded-xl bg-pb-light text-pb-green transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#ebe7da] hover:shadow-sm focus-visible:ring-2 focus-visible:ring-pb-khaki focus-visible:outline-none active:translate-y-0"
+            className="group relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-pb-light text-pb-green transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#ebe7da] hover:shadow-sm focus-visible:ring-2 focus-visible:ring-pb-khaki focus-visible:outline-none active:translate-y-0"
           >
             <BellIcon className="h-5 w-5 transition-transform duration-300 group-hover:rotate-[12deg]" />
 
@@ -250,17 +319,17 @@ function StudentNavbar({ onMenuClick, isSidebarOpen }) {
               aria-haspopup="menu"
               aria-label={`Open profile menu for ${user?.name || "student"}`}
               onClick={() => setShowProfileMenu((open) => !open)}
-              className={`flex items-center gap-2.5 rounded-xl border px-2 py-1.5 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-pb-khaki focus-visible:outline-none active:scale-[0.98] sm:px-2.5 ${
+              className={`flex items-center gap-2 rounded-xl border px-1.5 py-1 sm:px-2.5 sm:py-1.5 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-pb-khaki focus-visible:outline-none active:scale-[0.98] ${
                 showProfileMenu
                   ? "border-pb-khaki bg-pb-light"
                   : "border-transparent hover:bg-pb-light"
               }`}
             >
-              <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pb-khaki to-[#c9b95f] text-sm font-extrabold text-white shadow-sm">
+              <span className="relative flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pb-khaki to-[#c9b95f] text-sm font-extrabold text-white shadow-sm">
                 {initial}
                 <span
                   aria-hidden="true"
-                  className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white bg-green-500"
+                  className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full border-2 border-white bg-green-500"
                 />
               </span>
 
@@ -325,6 +394,37 @@ function StudentNavbar({ onMenuClick, isSidebarOpen }) {
 
           </div>
         </div>
+      </div>
+
+      {/* ---------- MOBILE SUB-BAR (Directly below navbar, always fixed & visible, no 3-dot) ---------- */}
+      <div className="border-t border-pb-border/80 bg-white/95 px-2 py-2 shadow-xs backdrop-blur-xl lg:hidden">
+        <nav
+          aria-label="Student mobile quick navigation"
+          className="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-1 py-0.5"
+        >
+          {studentSubNavItems.map(({ label, icon: Icon, path, end }) => (
+            <NavLink
+              key={path}
+              to={path}
+              end={end}
+              style={({ isActive }) => ({
+                color: isActive ? "#26351e" : "#334155",
+                backgroundColor: isActive ? "#f5f3ed" : "#ffffff",
+                borderColor: isActive ? "#26351e" : "#e5e0d3",
+              })}
+              className={({ isActive }) =>
+                `flex shrink-0 min-h-[36px] items-center gap-1.5 rounded-lg border px-3 py-1.5 text-center text-xs font-bold transition-all duration-200 active:scale-95 ${
+                  isActive
+                    ? "border-pb-green bg-pb-light text-pb-green shadow-xs font-extrabold"
+                    : "border-pb-border bg-white text-slate-700 hover:border-pb-khaki hover:bg-pb-light hover:text-pb-green"
+                }`
+              }
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span className="whitespace-nowrap">{label}</span>
+            </NavLink>
+          ))}
+        </nav>
       </div>
     </header>
   );
